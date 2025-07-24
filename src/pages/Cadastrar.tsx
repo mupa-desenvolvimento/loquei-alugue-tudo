@@ -74,7 +74,7 @@ const Cadastrar = () => {
           <Link to="/" className="inline-block">
             <div className="flex items-center justify-center space-x-2 mb-6">
               <img 
-                src="/lovable-uploads/6494e490-9033-4592-aa5e-f864c755286a.png" 
+                src="/lovable-uploads/46d0dc9e-74fd-49cf-8e73-306a25807b36.png" 
                 alt="Loquei" 
                 className="h-12 w-auto"
               />
