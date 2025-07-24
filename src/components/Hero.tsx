@@ -1,6 +1,7 @@
 import { Search, ArrowRight, TrendingUp, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-loquei.jpg";
 
 const Hero = () => {
@@ -49,9 +50,11 @@ const Hero = () => {
                       className="pl-10 pr-4 py-3 text-base border-2"
                     />
                   </div>
-                  <Button size="lg" className="bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 px-8">
-                    Buscar
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                  <Button size="lg" className="bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 px-8" asChild>
+                    <Link to="/buscar">
+                      Buscar
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
                 </div>
               </div>
@@ -96,11 +99,12 @@ const Hero = () => {
                 <Button 
                   size="lg" 
                   className="w-full bg-gradient-to-r from-brand-yellow to-brand-blue text-white border-0 text-lg py-6"
+                  asChild
                 >
-                  Anunciar meu primeiro item
+                  <Link to="/anunciar">Anunciar meu primeiro item</Link>
                 </Button>
-                <Button variant="outline" size="lg" className="w-full text-lg py-6">
-                  Ver como funciona
+                <Button variant="outline" size="lg" className="w-full text-lg py-6" asChild>
+                  <Link to="/como-funciona">Ver como funciona</Link>
                 </Button>
               </div>
               <div className="text-center text-sm text-muted-foreground">

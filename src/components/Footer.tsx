@@ -1,6 +1,7 @@
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -36,10 +37,10 @@ const Footer = () => {
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-background">Para Locatários</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Como alugar</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Todas as categorias</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Meus favoritos</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Minhas locações</a></li>
+              <li><Link to="/como-funciona" className="text-background/80 hover:text-background transition-colors">Como alugar</Link></li>
+              <li><Link to="/buscar" className="text-background/80 hover:text-background transition-colors">Todas as categorias</Link></li>
+              <li><Link to="/favoritos" className="text-background/80 hover:text-background transition-colors">Meus favoritos</Link></li>
+              <li><Link to="/mensagens" className="text-background/80 hover:text-background transition-colors">Minhas locações</Link></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Central de ajuda</a></li>
             </ul>
           </div>
@@ -47,8 +48,8 @@ const Footer = () => {
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-background">Para Locadores</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Anunciar item</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Como funciona</a></li>
+              <li><Link to="/anunciar" className="text-background/80 hover:text-background transition-colors">Anunciar item</Link></li>
+              <li><Link to="/como-funciona" className="text-background/80 hover:text-background transition-colors">Como funciona</Link></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Dicas para locadores</a></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Meus anúncios</a></li>
               <li><a href="#" className="text-background/80 hover:text-background transition-colors">Painel financeiro</a></li>
