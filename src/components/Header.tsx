@@ -20,12 +20,12 @@ const Header = () => {
           {/* Search Bar - Hidden on mobile */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Link to="/buscar" className="w-full">
                 <Input
                   type="text"
                   placeholder="Buscar por categoria, local ou item..."
-                  className="pl-10 pr-4 py-2 w-full border-2 border-border focus:border-primary transition-colors cursor-pointer"
+                  className="pl-12 pr-4 py-3 w-full rounded-2xl border-2 border-border focus:border-primary transition-all shadow-modern cursor-pointer"
                   readOnly
                 />
               </Link>
@@ -56,34 +56,34 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="hidden sm:flex" asChild>
+            <Button variant="ghost" size="sm" className="hidden sm:flex rounded-xl" asChild>
               <Link to="/entrar">Entrar</Link>
             </Button>
-            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-primary to-secondary text-white border-0 hover:opacity-90" asChild>
+            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-primary to-accent text-white border-0 hover:opacity-90 rounded-xl px-6" asChild>
               <Link to="/cadastrar">Cadastrar</Link>
             </Button>
             
             {/* User Avatar */}
-            <Button variant="ghost" size="sm" className="p-2">
+            <Button variant="ghost" size="sm" className="p-3 rounded-xl">
               <User className="h-5 w-5" />
             </Button>
 
             {/* Mobile Menu */}
-            <Button variant="ghost" size="sm" className="p-2 md:hidden">
+            <Button variant="ghost" size="sm" className="p-3 rounded-xl md:hidden">
               <Menu className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
         {/* Mobile Search Bar */}
-        <div className="md:hidden mt-3">
+        <div className="md:hidden mt-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
             <Link to="/buscar" className="w-full">
               <Input
                 type="text"
                 placeholder="Buscar itens para alugar..."
-                className="pl-10 pr-4 py-2 w-full border-2 border-border focus:border-primary transition-colors cursor-pointer"
+                className="pl-12 pr-4 py-3 w-full rounded-2xl border-2 border-border focus:border-primary transition-all shadow-modern cursor-pointer"
                 readOnly
               />
             </Link>

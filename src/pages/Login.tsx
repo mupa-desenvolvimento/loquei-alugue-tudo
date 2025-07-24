@@ -4,28 +4,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ProgressSteps, type Step } from "@/components/ui/progress-steps";
 import { Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-// Logo será implementado quando disponível
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+
+const loginSteps: Step[] = [
+  { id: "welcome", title: "Boas-vindas", description: "Início" },
+  { id: "credentials", title: "Credenciais", description: "Login" },
+  { id: "verification", title: "Verificação", description: "Segurança" }
+];
 
 const Login = () => {
+  const [currentStep, setCurrentStep] = useState("welcome");
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleNextStep = (stepId: string) => {
+    setCompletedSteps(prev => [...prev, currentStep]);
+    setCurrentStep(stepId);
+  };
+
+  const handlePreviousStep = (stepId: string) => {
+    setCurrentStep(stepId);
+    setCompletedSteps(prev => prev.filter(id => id !== stepId));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implementar lógica de login
     console.log("Login attempt:", { email, password });
+    handleNextStep("verification");
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center px-4">
+      <div className="w-full max-w-lg space-y-8">
         {/* Logo */}
         <div className="text-center">
           <Link to="/" className="inline-block">
-            <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="flex items-center justify-center space-x-2 mb-6">
               <img 
                 src="/lovable-uploads/6494e490-9033-4592-aa5e-f864c755286a.png" 
                 alt="Loquei" 
@@ -33,102 +52,162 @@ const Login = () => {
               />
             </div>
           </Link>
-          <h2 className="text-3xl font-bold text-foreground">Entrar na Loquei</h2>
-          <p className="text-muted-foreground mt-2">
+          <h2 className="text-3xl font-bold text-foreground mb-2">Entrar na Loquei</h2>
+          <p className="text-muted-foreground">
             Acesse sua conta para alugar ou anunciar
           </p>
         </div>
 
-        <Card className="border-2 border-primary/20">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Login</CardTitle>
-            <CardDescription className="text-center">
-              Digite seus dados para acessar sua conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
+        {/* Progress Steps */}
+        <ProgressSteps
+          steps={loginSteps}
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+        />
 
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Digite sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        <Card className="border-0 shadow-elevated rounded-3xl overflow-hidden">
+          <CardContent className="p-8">
+            {currentStep === "welcome" && (
+              <div className="space-y-6 text-center">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl">Bem-vindo de volta!</CardTitle>
+                  <CardDescription>
+                    Que bom te ver novamente. Vamos acessar sua conta?
+                  </CardDescription>
+                </div>
+
+                <div className="space-y-4">
+                  <Button 
+                    onClick={() => handleNextStep("credentials")} 
+                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-accent shadow-modern"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                    Continuar com email
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+
+                  <Separator className="my-6" />
+
+                  <div className="space-y-3">
+                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
+                      Continuar com Google
+                    </Button>
+                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
+                      Continuar com Facebook
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="text-center pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Não tem uma conta?{" "}
+                    <Link to="/cadastrar" className="text-primary hover:underline font-medium">
+                      Cadastre-se aqui
+                    </Link>
+                  </p>
                 </div>
               </div>
+            )}
 
-              {/* Forgot Password */}
-              <div className="flex justify-end">
-                <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
-                  Esqueci minha senha
-                </Link>
+            {currentStep === "credentials" && (
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handlePreviousStep("welcome")}
+                    className="p-2 rounded-xl"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle className="text-xl">Digite suas credenciais</CardTitle>
+                    <CardDescription>
+                      Informe seu email e senha para continuar
+                    </CardDescription>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-12 h-12 rounded-xl border-2 focus:border-primary transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Digite sua senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-12 pr-12 h-12 rounded-xl border-2 focus:border-primary transition-all"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Forgot Password */}
+                  <div className="flex justify-end">
+                    <Link to="/esqueci-senha" className="text-sm text-primary hover:underline">
+                      Esqueci minha senha
+                    </Link>
+                  </div>
+
+                  {/* Login Button */}
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent shadow-modern"
+                  >
+                    Entrar na minha conta
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </form>
               </div>
+            )}
 
-              {/* Login Button */}
-              <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary">
-                Entrar
-              </Button>
-            </form>
+            {currentStep === "verification" && (
+              <div className="space-y-6 text-center">
+                <div className="space-y-2">
+                  <CardTitle className="text-2xl">Login realizado!</CardTitle>
+                  <CardDescription>
+                    Redirecionando você para a plataforma...
+                  </CardDescription>
+                </div>
 
-            <Separator />
-
-            {/* Social Login */}
-            <div className="space-y-2">
-              <Button variant="outline" className="w-full">
-                Continuar com Google
-              </Button>
-              <Button variant="outline" className="w-full">
-                Continuar com Facebook
-              </Button>
-            </div>
-
-            {/* Register Link */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{" "}
-                <Link to="/cadastrar" className="text-primary hover:underline font-medium">
-                  Cadastre-se aqui
-                </Link>
-              </p>
-            </div>
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Back to Home */}
         <div className="text-center">
-          <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
+          <Link to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
             ← Voltar para página inicial
           </Link>
         </div>
