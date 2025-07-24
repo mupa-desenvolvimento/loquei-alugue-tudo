@@ -11,10 +11,11 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg" style={{ background: 'var(--gradient-primary)' }}>
-                <span className="text-white font-bold text-xl">L</span>
-              </div>
-              <span className="text-3xl font-bold text-background">Loquei</span>
+              <img 
+                src="/lovable-uploads/6494e490-9033-4592-aa5e-f864c755286a.png" 
+                alt="Loquei" 
+                className="h-10 w-auto"
+              />
             </div>
             <p className="text-background/80 leading-relaxed">
               A maior plataforma de locação P2P do Brasil. Conectamos quem tem com quem precisa 

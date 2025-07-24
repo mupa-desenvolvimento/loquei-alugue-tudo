@@ -26,12 +26,11 @@ const Login = () => {
         <div className="text-center">
           <Link to="/" className="inline-block">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg" style={{ background: 'var(--gradient-primary)' }}>
-                <span className="text-white font-bold text-xl">L</span>
-              </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Loquei
-              </span>
+              <img 
+                src="/lovable-uploads/6494e490-9033-4592-aa5e-f864c755286a.png" 
+                alt="Loquei" 
+                className="h-12 w-auto"
+              />
             </div>
           </Link>
           <h2 className="text-3xl font-bold text-foreground">Entrar na Loquei</h2>
