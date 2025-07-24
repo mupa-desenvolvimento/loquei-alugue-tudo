@@ -10,12 +10,11 @@ const Header = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg" style={{ background: 'var(--gradient-primary)' }}>
-              <span className="text-white font-bold text-lg">L</span>
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Loquei
-            </span>
+            <img 
+              src="/src/assets/loquei-logo.png" 
+              alt="Loquei" 
+              className="h-8 w-auto"
+            />
           </Link>
 
           {/* Search Bar - Hidden on mobile */}
