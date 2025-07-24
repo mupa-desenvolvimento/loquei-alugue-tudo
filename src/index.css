@@ -2,122 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Loquei Design System - Marketplace de Locação
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 220 14% 98%;
-    --foreground: 225 43% 15%;
+    /* Modern Airbnb-inspired Color Palette */
+    --background: 255 255 255;
+    --foreground: 34 34 34;
+    --card: 255 255 255;
+    --card-foreground: 34 34 34;
+    --popover: 255 255 255;
+    --popover-foreground: 34 34 34;
+    --primary: 255 56 92;  /* Airbnb Red */
+    --primary-foreground: 255 255 255;
+    --secondary: 247 247 247;
+    --secondary-foreground: 34 34 34;
+    --muted: 247 247 247;
+    --muted-foreground: 113 113 122;
+    --accent: 247 247 247;
+    --accent-foreground: 34 34 34;
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --border: 221 221 221;
+    --input: 221 221 221;
+    --ring: 255 56 92;
+    --radius: 12px;
 
-    --card: 0 0% 100%;
-    --card-foreground: 225 43% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 43% 15%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 225 43% 15%;
-
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 142 71% 45%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
-
-    /* Loquei Professional Brand Colors */
-    --brand-blue: 217 91% 60%;
-    --brand-blue-light: 217 91% 70%;
-    --brand-blue-dark: 217 91% 50%;
-    --brand-green: 142 71% 45%;
-    --brand-green-light: 142 76% 73%;
-    --brand-yellow: 48 96% 53%;
-    --brand-gray-light: 220 14% 96%;
-    --brand-gray-dark: 225 43% 15%;
-
-    /* Professional Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(142 71% 45%));
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(142 71% 45%) 100%);
-    --gradient-cta: linear-gradient(135deg, hsl(217 91% 60%), hsl(48 96% 53%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
-
-    /* Professional Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(217 91% 60% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(217 91% 60% / 0.1), 0 2px 4px -2px hsl(217 91% 60% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(217 91% 60% / 0.1), 0 4px 6px -4px hsl(217 91% 60% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(217 91% 60% / 0.1), 0 8px 10px -6px hsl(217 91% 60% / 0.1);
-
-    /* Smooth Animations */
-    --animation-fast: 150ms ease-out;
-    --animation-normal: 250ms ease-out;
-    --animation-slow: 350ms ease-out;
-
-    --radius: 0.5rem;
+    /* Airbnb-style Brand Colors */
+    --brand-red: 255 56 92;     /* Airbnb signature red */
+    --brand-dark: 34 34 34;     /* Deep charcoal */
+    --brand-gray: 113 113 122;  /* Medium gray */
+    --brand-light: 247 247 247; /* Light gray background */
+    
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--brand-red)), hsl(348 83% 58%));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--brand-light)));
+    
+    /* Elegant Shadows (Airbnb-style) */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-card: 0 6px 16px rgb(0 0 0 / 0.12);
+    --shadow-hover: 0 6px 20px rgb(0 0 0 / 0.15);
+    
+    /* Smooth Transitions */
+    --transition-base: all 0.15s ease;
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 15 15 15;
+    --foreground: 255 255 255;
+    --card: 24 24 27;
+    --card-foreground: 255 255 255;
+    --popover: 24 24 27;
+    --popover-foreground: 255 255 255;
+    --primary: 255 56 92;
+    --primary-foreground: 255 255 255;
+    --secondary: 39 39 42;
+    --secondary-foreground: 255 255 255;
+    --muted: 39 39 42;
+    --muted-foreground: 161 161 170;
+    --accent: 39 39 42;
+    --accent-foreground: 255 255 255;
+    --destructive: 248 113 113;
+    --destructive-foreground: 15 15 15;
+    --border: 39 39 42;
+    --input: 39 39 42;
+    --ring: 255 56 92;
+    --brand-red: 255 56 92;
+    --brand-dark: 255 255 255;
+    --brand-gray: 161 161 170;
+    --brand-light: 39 39 42;
   }
 }
 
@@ -125,8 +89,35 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  
+  /* Airbnb-style Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+}
+
+@layer utilities {
+  /* Modern Button Styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-brand-red to-red-500 text-white rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  .btn-secondary {
+    @apply bg-white border-2 border-brand-dark text-brand-dark rounded-xl px-6 py-3 font-medium transition-all duration-200 hover:bg-brand-dark hover:text-white;
+  }
+  
+  /* Card Styles */
+  .card-modern {
+    @apply bg-white rounded-2xl border border-gray-200 transition-all duration-200 hover:shadow-xl;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-xl hover:-translate-y-1 transition-all duration-300;
   }
 }

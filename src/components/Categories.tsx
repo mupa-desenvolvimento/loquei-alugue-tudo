@@ -18,111 +18,109 @@ const categories = [
     icon: Hammer,
     description: "Furadeiras, serras, equipamentos",
     count: "2.1k itens",
-    color: "from-brand-yellow to-brand-yellow/80"
+    color: "bg-orange-500"
   },
   {
     name: "Fotografia",
     icon: Camera,
     description: "Câmeras, lentes, equipamentos",
     count: "850 itens",
-    color: "from-brand-blue to-brand-blue/80"
+    color: "bg-blue-500"
   },
   {
     name: "Moda",
     icon: Shirt,
     description: "Roupas, acessórios, calçados",
     count: "1.5k itens",
-    color: "from-brand-green to-brand-green-light"
+    color: "bg-pink-500"
   },
   {
     name: "Esportes",
     icon: Bike,
     description: "Bikes, equipamentos, acessórios",
     count: "920 itens",
-    color: "from-brand-green to-brand-green-light"
+    color: "bg-green-500"
   },
   {
     name: "Áudio & Música",
     icon: Music,
     description: "Som, instrumentos, equipamentos",
     count: "640 itens",
-    color: "from-brand-blue to-brand-green"
+    color: "bg-purple-500"
   },
   {
     name: "Veículos",
     icon: Car,
     description: "Carros, motos, utilitários",
     count: "380 itens",
-    color: "from-brand-yellow to-brand-blue"
+    color: "bg-red-500"
   },
   {
     name: "Eletrônicos",
     icon: Laptop,
     description: "Notebooks, tablets, gadgets",
     count: "1.2k itens",
-    color: "from-brand-blue to-brand-yellow"
+    color: "bg-indigo-500"
   },
   {
     name: "Casa & Jardim",
     icon: Home,
     description: "Móveis, decoração, utensílios",
     count: "760 itens",
-    color: "from-brand-green to-brand-blue"
+    color: "bg-teal-500"
   }
 ];
 
 const Categories = () => {
   return (
-    <section className="py-16 bg-secondary/30">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Explore por <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">Categorias</span>
+    <section className="py-20 bg-gray-50">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-brand-dark">
+            Explore por <span className="text-primary">categorias</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed">
             Encontre exatamente o que precisa ou descubra oportunidades de locação em diferentes nichos
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {categories.map((category, index) => {
             const IconComponent = category.icon;
             return (
-              <Card 
+              <div 
                 key={index}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-card hover:scale-105"
+                className="group bg-white rounded-3xl p-8 shadow-airbnb hover:shadow-airbnb-hover transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-gray-100"
               >
-                <CardContent className="p-6">
-                  <div className="text-center space-y-4">
-                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {category.description}
-                      </p>
-                      <div className="text-xs font-medium text-brand-blue">
-                        {category.count}
-                      </div>
+                <div className="text-center space-y-4">
+                  <div className={`w-16 h-16 mx-auto rounded-2xl ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors text-brand-dark">
+                      {category.name}
+                    </h3>
+                    <p className="text-sm text-brand-gray mb-3 leading-relaxed">
+                      {category.description}
+                    </p>
+                    <div className="text-xs font-medium text-primary bg-primary/10 rounded-full px-3 py-1 inline-block">
+                      {category.count}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-16">
           <Button 
             variant="outline" 
             size="lg"
-            className="border-2 border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+            className="border-2 border-brand-dark text-brand-dark hover:bg-brand-dark hover:text-white rounded-2xl px-8 py-4 font-semibold text-lg transition-all duration-200"
           >
             Ver todas as categorias
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </div>
