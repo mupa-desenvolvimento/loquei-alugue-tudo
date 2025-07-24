@@ -13,7 +13,7 @@ const Header = () => {
             <div className="flex items-center justify-center w-10 h-10 rounded-lg" style={{ background: 'var(--gradient-primary)' }}>
               <span className="text-white font-bold text-lg">L</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Loquei
             </span>
           </Link>
@@ -57,11 +57,11 @@ const Header = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="hidden sm:flex">
-              Entrar
+            <Button variant="ghost" size="sm" className="hidden sm:flex" asChild>
+              <Link to="/entrar">Entrar</Link>
             </Button>
-            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 hover:from-brand-blue-dark hover:to-brand-green">
-              Cadastrar
+            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-primary to-secondary text-white border-0 hover:opacity-90" asChild>
+              <Link to="/cadastrar">Cadastrar</Link>
             </Button>
             
             {/* User Avatar */}
