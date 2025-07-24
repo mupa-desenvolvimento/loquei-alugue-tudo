@@ -108,7 +108,7 @@ const FeaturedItems = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Itens em <span className="bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">Destaque</span>
+            Itens em <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">Destaque</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Descubra os itens mais procurados e bem avaliados da nossa comunidade
@@ -128,7 +128,7 @@ const FeaturedItems = () => {
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 {item.featured && (
-                  <Badge className="absolute top-3 left-3 bg-brand-orange text-white">
+                  <Badge className="absolute top-3 left-3 bg-brand-yellow text-brand-gray-dark">
                     Destaque
                   </Badge>
                 )}
@@ -196,7 +196,7 @@ const FeaturedItems = () => {
                   </div>
 
                   <Button 
-                    className="w-full bg-gradient-to-r from-brand-blue to-brand-purple text-white border-0 hover:from-brand-blue-dark hover:to-brand-purple"
+                    className="w-full bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 hover:from-brand-blue-dark hover:to-brand-green"
                     disabled={!item.available}
                   >
                     {item.available ? 'Ver detalhes' : 'Indisponível'}

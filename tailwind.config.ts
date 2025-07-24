@@ -56,9 +56,11 @@ export default {
 					blue: 'hsl(var(--brand-blue))',
 					'blue-light': 'hsl(var(--brand-blue-light))',
 					'blue-dark': 'hsl(var(--brand-blue-dark))',
-					orange: 'hsl(var(--brand-orange))',
 					green: 'hsl(var(--brand-green))',
-					purple: 'hsl(var(--brand-purple))'
+					'green-light': 'hsl(var(--brand-green-light))',
+					yellow: 'hsl(var(--brand-yellow))',
+					'gray-light': 'hsl(var(--brand-gray-light))',
+					'gray-dark': 'hsl(var(--brand-gray-dark))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

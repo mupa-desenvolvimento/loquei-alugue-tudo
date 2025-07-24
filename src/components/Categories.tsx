@@ -18,7 +18,7 @@ const categories = [
     icon: Hammer,
     description: "Furadeiras, serras, equipamentos",
     count: "2.1k itens",
-    color: "from-brand-orange to-brand-orange/80"
+    color: "from-brand-yellow to-brand-yellow/80"
   },
   {
     name: "Fotografia",
@@ -32,35 +32,35 @@ const categories = [
     icon: Shirt,
     description: "Roupas, acessórios, calçados",
     count: "1.5k itens",
-    color: "from-brand-purple to-brand-purple/80"
+    color: "from-brand-green to-brand-green-light"
   },
   {
     name: "Esportes",
     icon: Bike,
     description: "Bikes, equipamentos, acessórios",
     count: "920 itens",
-    color: "from-brand-green to-brand-green/80"
+    color: "from-brand-green to-brand-green-light"
   },
   {
     name: "Áudio & Música",
     icon: Music,
     description: "Som, instrumentos, equipamentos",
     count: "640 itens",
-    color: "from-brand-blue to-brand-purple"
+    color: "from-brand-blue to-brand-green"
   },
   {
     name: "Veículos",
     icon: Car,
     description: "Carros, motos, utilitários",
     count: "380 itens",
-    color: "from-brand-orange to-brand-blue"
+    color: "from-brand-yellow to-brand-blue"
   },
   {
     name: "Eletrônicos",
     icon: Laptop,
     description: "Notebooks, tablets, gadgets",
     count: "1.2k itens",
-    color: "from-brand-purple to-brand-orange"
+    color: "from-brand-blue to-brand-yellow"
   },
   {
     name: "Casa & Jardim",
@@ -77,7 +77,7 @@ const Categories = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Explore por <span className="bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">Categorias</span>
+            Explore por <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">Categorias</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Encontre exatamente o que precisa ou descubra oportunidades de locação em diferentes nichos

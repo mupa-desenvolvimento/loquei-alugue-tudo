@@ -22,7 +22,7 @@ const Hero = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-brand-blue via-brand-purple to-brand-orange bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">
                   Se você tem,
                 </span>
                 <br />
@@ -49,7 +49,7 @@ const Hero = () => {
                       className="pl-10 pr-4 py-3 text-base border-2"
                     />
                   </div>
-                  <Button size="lg" className="bg-gradient-to-r from-brand-blue to-brand-purple text-white border-0 px-8">
+                  <Button size="lg" className="bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 px-8">
                     Buscar
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -67,8 +67,8 @@ const Hero = () => {
                 <div className="text-sm text-muted-foreground">Itens disponíveis</div>
               </div>
               <div className="text-center">
-                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-brand-purple/10">
-                  <Users className="h-6 w-6 text-brand-purple" />
+                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-lg bg-brand-green/10">
+                  <Users className="h-6 w-6 text-brand-green" />
                 </div>
                 <div className="text-2xl font-bold text-foreground">5k+</div>
                 <div className="text-sm text-muted-foreground">Usuários ativos</div>
@@ -95,7 +95,7 @@ const Hero = () => {
               <div className="space-y-3">
                 <Button 
                   size="lg" 
-                  className="w-full bg-gradient-to-r from-brand-orange to-brand-blue text-white border-0 text-lg py-6"
+                  className="w-full bg-gradient-to-r from-brand-yellow to-brand-blue text-white border-0 text-lg py-6"
                 >
                   Anunciar meu primeiro item
                 </Button>

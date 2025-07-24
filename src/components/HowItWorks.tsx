@@ -12,13 +12,13 @@ const steps = [
     icon: MessageCircle,
     title: "Converse com o locador",
     description: "Tire suas dúvidas, combine detalhes da entrega e confirme a disponibilidade do item.",
-    color: "from-brand-purple to-brand-purple/80"
+    color: "from-brand-green to-brand-green/80"
   },
   {
     icon: CreditCard,
     title: "Faça a reserva",
     description: "Pagamento seguro com cartão, PIX ou boleto. Valor retido até a confirmação da entrega.",
-    color: "from-brand-orange to-brand-orange/80"
+    color: "from-brand-yellow to-brand-yellow/80"
   },
   {
     icon: CheckCircle,
@@ -52,7 +52,7 @@ const HowItWorks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Como <span className="bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">Funciona</span>
+            Como <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">Funciona</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Alugar na Loquei é simples, seguro e rápido. Veja como em 4 passos:
@@ -87,8 +87,8 @@ const HowItWorks = () => {
                 {/* Arrow connector for desktop */}
                 {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                    <div className="w-8 h-0.5 bg-gradient-to-r from-brand-blue to-brand-purple"></div>
-                    <div className="absolute -right-1 -top-1 w-3 h-3 bg-brand-purple rounded-full transform rotate-45"></div>
+                    <div className="w-8 h-0.5 bg-gradient-to-r from-brand-blue to-brand-green"></div>
+                    <div className="absolute -right-1 -top-1 w-3 h-3 bg-brand-green rounded-full transform rotate-45"></div>
                   </div>
                 )}
               </div>
@@ -100,7 +100,7 @@ const HowItWorks = () => {
         <div className="bg-card rounded-3xl p-8 md:p-12 shadow-lg">
           <div className="text-center mb-12">
             <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              Por que escolher a <span className="bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">Loquei?</span>
+              Por que escolher a <span className="bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">Loquei?</span>
             </h3>
             <p className="text-muted-foreground">
               Conectamos pessoas de forma segura e inteligente
@@ -112,7 +112,7 @@ const HowItWorks = () => {
               const IconComponent = benefit.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-blue/10 to-brand-purple/10 flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-brand-blue/10 to-brand-green/10 flex items-center justify-center">
                     <IconComponent className="h-8 w-8 text-brand-blue" />
                   </div>
                   <h4 className="text-lg font-semibold mb-2">

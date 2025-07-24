@@ -12,7 +12,7 @@ const Header = () => {
             <div className="flex items-center justify-center w-10 h-10 rounded-lg" style={{ background: 'var(--gradient-primary)' }}>
               <span className="text-white font-bold text-lg">L</span>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-brand-blue to-brand-green bg-clip-text text-transparent">
               Loquei
             </span>
           </div>
@@ -52,7 +52,7 @@ const Header = () => {
             <Button variant="ghost" size="sm" className="hidden sm:flex">
               Entrar
             </Button>
-            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-brand-blue to-brand-purple text-white border-0 hover:from-brand-blue-dark hover:to-brand-purple">
+            <Button size="sm" className="hidden sm:flex bg-gradient-to-r from-brand-blue to-brand-green text-white border-0 hover:from-brand-blue-dark hover:to-brand-green">
               Cadastrar
             </Button>
             

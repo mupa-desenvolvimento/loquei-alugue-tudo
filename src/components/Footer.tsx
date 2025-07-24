@@ -67,7 +67,7 @@ const Footer = () => {
                 placeholder="Seu melhor e-mail"
                 className="bg-background/10 border-background/30 text-background placeholder:text-background/60"
               />
-              <Button className="w-full bg-gradient-to-r from-brand-blue to-brand-purple text-white border-0">
+              <Button className="w-full bg-gradient-to-r from-brand-blue to-brand-green text-white border-0">
                 Inscrever-se
               </Button>
             </div>
