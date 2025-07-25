@@ -12,6 +12,7 @@ import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft }
 
 const registerSteps: Step[] = [
   { id: "welcome", title: "Boas-vindas", description: "Início" },
+  { id: "profile", title: "Perfil", description: "Locador ou Locatário" },
   { id: "type", title: "Tipo", description: "PF ou PJ" },
   { id: "basic", title: "Dados", description: "Informações" },
   { id: "security", title: "Segurança", description: "Senha" },
@@ -23,6 +24,7 @@ const Cadastrar = () => {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userProfile, setUserProfile] = useState(""); // locatario ou locador
   const [userType, setUserType] = useState("pf");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [formData, setFormData] = useState({
@@ -63,7 +65,7 @@ const Cadastrar = () => {
       return;
     }
     // TODO: Implementar lógica de cadastro
-    console.log("Register attempt:", { ...formData, userType });
+    console.log("Register attempt:", { ...formData, userType, userProfile });
   };
 
   return (
@@ -106,7 +108,7 @@ const Cadastrar = () => {
 
                 <div className="space-y-4">
                   <Button 
-                    onClick={() => handleNextStep("type")} 
+                    onClick={() => handleNextStep("profile")} 
                     className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-accent shadow-modern"
                   >
                     Começar cadastro
@@ -136,7 +138,7 @@ const Cadastrar = () => {
               </div>
             )}
 
-            {currentStep === "type" && (
+            {currentStep === "profile" && (
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <Button
@@ -148,9 +150,88 @@ const Cadastrar = () => {
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <div>
-                    <CardTitle className="text-xl">Tipo de cadastro</CardTitle>
+                    <CardTitle className="text-xl">Qual é o seu objetivo?</CardTitle>
                     <CardDescription>
-                      Escolha o tipo de conta que deseja criar
+                      Escolha como deseja usar a plataforma
+                    </CardDescription>
+                  </div>
+                </div>
+
+                <RadioGroup value={userProfile} onValueChange={setUserProfile} className="space-y-4">
+                  <div className="flex items-center space-x-3 p-6 border-2 rounded-2xl hover:border-primary transition-colors cursor-pointer">
+                    <RadioGroupItem value="locatario" id="locatario" />
+                    <Label htmlFor="locatario" className="flex-1 cursor-pointer">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                          <User className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-lg">Sou Locatário</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quero alugar produtos e equipamentos de outras pessoas
+                          </p>
+                          <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                            <li>• Encontrar produtos para alugar</li>
+                            <li>• Salvar favoritos</li>
+                            <li>• Conversar com locadores</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 p-6 border-2 rounded-2xl hover:border-primary transition-colors cursor-pointer">
+                    <RadioGroupItem value="locador" id="locador" />
+                    <Label htmlFor="locador" className="flex-1 cursor-pointer">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                          <Building className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-lg">Sou Locador</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quero disponibilizar meus produtos para locação e ganhar dinheiro
+                          </p>
+                          <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                            <li>• Anunciar produtos</li>
+                            <li>• Gerenciar locações</li>
+                            <li>• Promover anúncios</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                <Button 
+                  onClick={() => handleNextStep("type")} 
+                  disabled={!userProfile}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent disabled:opacity-50"
+                >
+                  Continuar
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {currentStep === "type" && (
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handlePreviousStep("profile")}
+                    className="p-2 rounded-xl"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div>
+                    <CardTitle className="text-xl">Tipo de conta</CardTitle>
+                    <CardDescription>
+                      {userProfile === "locador" 
+                        ? "Como locador, informe se é pessoa física ou jurídica" 
+                        : "Escolha o tipo de conta que deseja criar"
+                      }
                     </CardDescription>
                   </div>
                 </div>
@@ -161,7 +242,9 @@ const Cadastrar = () => {
                     <Label htmlFor="pf" className="flex-1 cursor-pointer">
                       <div>
                         <p className="font-medium">Pessoa Física</p>
-                        <p className="text-sm text-muted-foreground">Para uso pessoal</p>
+                        <p className="text-sm text-muted-foreground">
+                          {userProfile === "locador" ? "Para locadores individuais" : "Para uso pessoal"}
+                        </p>
                       </div>
                     </Label>
                   </div>
@@ -170,7 +253,9 @@ const Cadastrar = () => {
                     <Label htmlFor="pj" className="flex-1 cursor-pointer">
                       <div>
                         <p className="font-medium">Pessoa Jurídica</p>
-                        <p className="text-sm text-muted-foreground">Para empresas</p>
+                        <p className="text-sm text-muted-foreground">
+                          {userProfile === "locador" ? "Para empresas de locação" : "Para empresas"}
+                        </p>
                       </div>
                     </Label>
                   </div>
