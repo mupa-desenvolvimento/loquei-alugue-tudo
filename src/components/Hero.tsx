@@ -9,16 +9,12 @@ const Hero = () => {
     <section className="relative overflow-hidden">
       {/* Background with gradient overlay */}
       <div className="absolute inset-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
+        <img
+          src="/lovable-uploads/3c01d2cd-751e-4c26-af4f-669e437a074a.png"
+          alt="Loquei - Marketplace de Locação"
           className="w-full h-full object-cover"
-        >
-          <source src="/hero-video.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/40" />
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/20" />
       </div>
 
       <div className="relative container mx-auto px-4 py-20 lg:py-32">
