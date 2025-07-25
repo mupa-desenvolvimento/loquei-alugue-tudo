@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ProgressSteps, type Step } from "@/components/ui/progress-steps";
+import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 import { Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft } from "lucide-react";
 
