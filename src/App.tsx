@@ -11,6 +11,8 @@ import Mensagens from "./pages/Mensagens";
 import Buscar from "./pages/Buscar";
 import Login from "./pages/Login";
 import Cadastrar from "./pages/Cadastrar";
+import PainelLocador from "./pages/PainelLocador";
+import PainelLocatario from "./pages/PainelLocatario";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/buscar" element={<Buscar />} />
           <Route path="/entrar" element={<Login />} />
           <Route path="/cadastrar" element={<Cadastrar />} />
+          <Route path="/painel-locador" element={<PainelLocador />} />
+          <Route path="/painel-locatario" element={<PainelLocatario />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
