@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressSteps, Step } from "@/components/ui/progress-steps";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft } from "lucide-react";
 
 const registerSteps: Step[] = [
@@ -20,6 +20,7 @@ const registerSteps: Step[] = [
 ];
 
 const Cadastrar = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState("welcome");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -64,8 +65,16 @@ const Cadastrar = () => {
       alert("Aceite os termos de uso para continuar!");
       return;
     }
-    // TODO: Implementar lógica de cadastro
+    
+    // TODO: Implementar lógica de cadastro real
     console.log("Register attempt:", { ...formData, userType, userProfile });
+    
+    // Redirecionar para a página correspondente ao tipo de usuário
+    if (userProfile === "locador") {
+      navigate("/painel-locador");
+    } else if (userProfile === "locatario") {
+      navigate("/painel-locatario");
+    }
   };
 
   return (
