@@ -8,7 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const registerSteps: Step[] = [
   { id: "welcome", title: "Boas-vindas", description: "Início" },
@@ -21,6 +23,7 @@ const registerSteps: Step[] = [
 
 const Cadastrar = () => {
   const navigate = useNavigate();
+  const { register, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState("welcome");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -55,25 +58,52 @@ const Cadastrar = () => {
     setCompletedSteps(prev => prev.filter(id => id !== stepId));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validações manuais
+    if (!formData.name || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
+      toast.error("Preencha todos os campos obrigatórios!");
+      return;
+    }
+
+    if (userType === "pj" && (!formData.companyName || !formData.cnpj)) {
+      toast.error("Preencha os dados da empresa!");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("A senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Senhas não coincidem!");
+      toast.error("As senhas não coincidem!");
       return;
     }
+    
     if (!acceptTerms) {
-      alert("Aceite os termos de uso para continuar!");
+      toast.error("Você precisa aceitar os termos de uso!");
       return;
     }
     
-    // TODO: Implementar lógica de cadastro real
-    console.log("Register attempt:", { ...formData, userType, userProfile });
+    const success = await register({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      type: userType,
+      profile: userProfile,
+      companyName: userType === "pj" ? formData.companyName : undefined,
+      cnpj: userType === "pj" ? formData.cnpj : undefined,
+    });
     
-    // Redirecionar para a página correspondente ao tipo de usuário
-    if (userProfile === "locador") {
-      navigate("/painel-locador");
-    } else if (userProfile === "locatario") {
-      navigate("/painel-locatario");
+    if (success) {
+      if (userProfile === "locador") {
+        navigate("/painel-locador");
+      } else {
+        navigate("/painel-locatario");
+      }
     }
   };
 
@@ -522,11 +552,20 @@ const Cadastrar = () => {
 
                   <Button 
                     onClick={handleSubmit}
-                    disabled={!acceptTerms}
+                    disabled={!acceptTerms || isLoading}
                     className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent disabled:opacity-50"
                   >
-                    Criar minha conta
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando conta...
+                      </>
+                    ) : (
+                      <>
+                        Criar minha conta
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>

@@ -1,10 +1,14 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { storageService } from "@/services/storage";
+import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +25,38 @@ import {
   Calendar,
   Users,
   Crown,
-  Zap
+  Zap,
+  Camera,
+  CreditCard,
+  User
 } from "lucide-react";
 
 const PainelLocador = () => {
+  const { user, updateUser } = useAuth();
   const [selectedPromotion, setSelectedPromotion] = useState<string>("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande (máx 5MB)");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const url = await storageService.uploadImage(file, "avatars");
+      await updateUser({ avatar: url });
+      toast.success("Foto de perfil atualizada!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao atualizar foto de perfil");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const mockItems = [
     {
@@ -82,11 +113,12 @@ const PainelLocador = () => {
         </div>
 
         <Tabs defaultValue="produtos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="produtos">Meus Produtos</TabsTrigger>
             <TabsTrigger value="promocoes">Promoções</TabsTrigger>
             <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+            <TabsTrigger value="perfil">Meu Perfil</TabsTrigger>
           </TabsList>
 
           <TabsContent value="produtos" className="space-y-6">
@@ -302,6 +334,98 @@ const PainelLocador = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="perfil" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações do Perfil</CardTitle>
+                <CardDescription>Gerencie suas informações pessoais e de locador</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <Avatar className="w-20 h-20 border-2 border-border cursor-pointer transition-all hover:border-primary">
+                      <AvatarImage src={user?.avatar} className="object-cover" />
+                      <AvatarFallback className="text-lg bg-muted">
+                        {user?.name?.substring(0, 2).toUpperCase() || "LO"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      {uploadingAvatar ? (
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      ) : (
+                        <Camera className="text-white h-6 w-6" />
+                      )}
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                      />
+                    </label>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">{user?.name || "Locador"}</h3>
+                    <p className="text-muted-foreground">{user?.email || "email@exemplo.com"}</p>
+                    <div className="flex gap-2 mt-2">
+                      <Button variant="outline" size="sm">
+                        Editar Perfil
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Ver Perfil Público
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Estatísticas do Locador</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total de Locações</span>
+                        <span className="font-medium">45</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Avaliação média</span>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">4.9</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tempo de resposta</span>
+                        <span className="font-medium">~ 1 hora</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Configurações</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <Button variant="outline" className="w-full justify-start">
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Dados Bancários
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Notificações de Aluguel
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        Verificação de Identidade
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>

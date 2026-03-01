@@ -1,52 +1,35 @@
 import { useState } from "react";
-import { Search, Filter, Grid, List, Heart, Star, MapPin, Crown, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { 
+  Map as MapIcon, 
+  List, 
+  Heart, 
+  Star, 
+  SlidersHorizontal, 
+  ChevronDown,
+  MapPin
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Buscar = () => {
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [currentBanner, setCurrentBanner] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [priceRange, setPriceRange] = useState([0, 500]);
 
-  // Featured banners for promoted items
-  const featuredBanners = [
-    {
-      id: 1,
-      title: "Equipamentos Profissionais",
-      description: "Ferramentas de alta qualidade para seus projetos",
-      image: "/placeholder.svg",
-      category: "Ferramentas",
-      price: "A partir de R$ 25/dia",
-      promoted: true,
-      promotionType: "destaque"
-    },
-    {
-      id: 2,
-      title: "Câmeras e Equipamentos de Foto",
-      description: "Capture momentos únicos com equipamentos profissionais",
-      image: "/placeholder.svg",
-      category: "Eletrônicos",
-      price: "A partir de R$ 50/dia",
-      promoted: true,
-      promotionType: "premium"
-    },
-    {
-      id: 3,
-      title: "Equipamentos para Eventos",
-      description: "Tudo para seu evento ser um sucesso",
-      image: "/placeholder.svg",
-      category: "Eventos",
-      price: "A partir de R$ 80/dia",
-      promoted: true,
-      promotionType: "destaque"
-    }
-  ];
-
-  // Mock data for demonstration
+  // Mock data aligned with Index.tsx style but more comprehensive
   const items = [
     {
       id: 1,
@@ -56,9 +39,9 @@ const Buscar = () => {
       rating: 4.8,
       reviews: 32,
       location: "São Paulo, SP",
-      owner: "João Silva",
-      image: "/placeholder.svg",
-      promoted: false
+      image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -23.550520, lng: -46.633308 },
+      guestFavorite: true
     },
     {
       id: 2,
@@ -68,10 +51,9 @@ const Buscar = () => {
       rating: 4.9,
       reviews: 18,
       location: "Rio de Janeiro, RJ", 
-      owner: "Maria Santos",
-      image: "/placeholder.svg",
-      promoted: true,
-      promotionType: "destaque"
+      image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -22.906847, lng: -43.172896 },
+      guestFavorite: false
     },
     {
       id: 3,
@@ -81,10 +63,9 @@ const Buscar = () => {
       rating: 4.7,
       reviews: 24,
       location: "Belo Horizonte, MG",
-      owner: "Pedro Costa",
-      image: "/placeholder.svg",
-      promoted: true,
-      promotionType: "premium"
+      image: "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -19.916681, lng: -43.934493 },
+      guestFavorite: true
     },
     {
       id: 4,
@@ -94,342 +75,180 @@ const Buscar = () => {
       rating: 4.6,
       reviews: 15,
       location: "Salvador, BA",
-      owner: "Ana Lima",
-      image: "/placeholder.svg",
-      promoted: false
+      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -12.977749, lng: -38.501630 },
+      guestFavorite: false
+    },
+    {
+      id: 5,
+      name: "Kit Ferramentas Completo",
+      category: "Ferramentas",
+      price: 35,
+      rating: 4.5,
+      reviews: 10,
+      location: "Curitiba, PR",
+      image: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -25.4284, lng: -49.2733 },
+      guestFavorite: false
+    },
+    {
+      id: 6,
+      name: "Caixa de Som JBL PartyBox",
+      category: "Eventos",
+      price: 120,
+      rating: 4.9,
+      reviews: 45,
+      location: "Florianópolis, SC",
+      image: "https://images.unsplash.com/photo-1545459720-aac3e5ca9678?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      coordinates: { lat: -27.5959, lng: -48.5480 },
+      guestFavorite: true
     }
   ];
 
-  const categories = [
-    { id: "all", name: "Todas", icon: "🔍", gradient: "from-blue-500 to-purple-600" },
-    { id: "tools", name: "Ferramentas", icon: "🔧", gradient: "from-orange-500 to-red-500" },
-    { id: "electronics", name: "Eletrônicos", icon: "📱", gradient: "from-blue-500 to-cyan-500" },
-    { id: "vehicles", name: "Veículos", icon: "🚗", gradient: "from-green-500 to-teal-500" },
-    { id: "home", name: "Casa & Jardim", icon: "🏠", gradient: "from-pink-500 to-rose-500" },
-    { id: "sports", name: "Esportes", icon: "⚽", gradient: "from-yellow-500 to-orange-500" },
-    { id: "events", name: "Eventos", icon: "🎉", gradient: "from-purple-500 to-pink-500" },
-    { id: "music", name: "Música", icon: "🎵", gradient: "from-indigo-500 to-purple-500" },
-  ];
-
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  const filteredItems = selectedCategory === "all" 
-    ? items 
-    : items.filter(item => 
-        item.category.toLowerCase() === categories.find(cat => cat.id === selectedCategory)?.name.toLowerCase()
-      );
-
-  // Auto-rotate banner
-  useState(() => {
-    const interval = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % featuredBanners.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  });
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Featured Banner Carousel */}
-        <div className="mb-12">
-          <div className="relative overflow-hidden rounded-3xl">
-            <div 
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentBanner * 100}%)` }}
-            >
-              {featuredBanners.map((banner, index) => (
-                <div key={banner.id} className="w-full flex-shrink-0">
-                  <div className={`relative h-80 bg-gradient-to-r ${
-                    banner.promotionType === 'destaque' 
-                      ? 'from-primary/90 to-accent/90' 
-                      : 'from-secondary/90 to-primary/90'
-                  } rounded-3xl overflow-hidden`}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
-                    <div className="relative z-10 h-full flex items-center">
-                      <div className="container mx-auto px-8">
-                        <div className="max-w-2xl text-white">
-                          <div className="flex items-center gap-2 mb-4">
-                            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                              {banner.promotionType === 'destaque' ? (
-                                <><Crown className="h-3 w-3 mr-1" /> Destaque Principal</>
-                              ) : (
-                                <><Zap className="h-3 w-3 mr-1" /> Premium</>
-                              )}
-                            </Badge>
-                            <Badge variant="outline" className="border-white/30 text-white">
-                              {banner.category}
-                            </Badge>
-                          </div>
-                          <h1 className="text-4xl md:text-5xl font-bold mb-4">{banner.title}</h1>
-                          <p className="text-xl text-white/90 mb-6">{banner.description}</p>
-                          <div className="flex items-center gap-4">
-                            <span className="text-2xl font-bold">{banner.price}</span>
-                            <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-                              Ver Produtos
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+      {/* Sticky Filter Bar */}
+      <div className="sticky top-[72px] z-30 bg-background border-b px-4 py-3 hidden md:block">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
+                  Preço <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80 p-4" align="start">
+                <DropdownMenuLabel>Faixa de preço</DropdownMenuLabel>
+                <div className="py-4">
+                  <Slider 
+                    defaultValue={[0, 500]} 
+                    max={1000} 
+                    step={10} 
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                  />
+                  <div className="flex justify-between mt-4 text-sm">
+                    <div className="border rounded-md px-3 py-1">
+                      <span className="text-muted-foreground text-xs block">Mínimo</span>
+                      <span>R$ {priceRange[0]}</span>
+                    </div>
+                    <div className="border rounded-md px-3 py-1">
+                      <span className="text-muted-foreground text-xs block">Máximo</span>
+                      <span>R$ {priceRange[1]}</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                <DropdownMenuSeparator />
+                <div className="flex justify-between pt-2">
+                  <Button variant="ghost" size="sm" onClick={() => setPriceRange([0, 1000])}>Limpar</Button>
+                  <Button size="sm">Aplicar</Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
+              Tipo de item
+            </Button>
             
-            {/* Banner Navigation */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2">
-              {featuredBanners.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentBanner(index)}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    currentBanner === index ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
+            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
+              Marca
+            </Button>
             
-            {/* Arrow Navigation */}
-            <button
-              onClick={() => setCurrentBanner(currentBanner === 0 ? featuredBanners.length - 1 : currentBanner - 1)}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 text-white transition-all"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button
-              onClick={() => setCurrentBanner(currentBanner === featuredBanners.length - 1 ? 0 : currentBanner + 1)}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 text-white transition-all"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar produtos..."
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Localização" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sp">São Paulo</SelectItem>
-                  <SelectItem value="rj">Rio de Janeiro</SelectItem>
-                  <SelectItem value="mg">Belo Horizonte</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
+            </Button>
           </div>
 
-          {/* Categories */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
-            {categories.map((category) => (
-              <Card
-                key={category.id}
-                className={`group cursor-pointer transition-all duration-300 hover:scale-105 ${
-                  selectedCategory === category.id ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
-                }`}
-                onClick={() => setSelectedCategory(category.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className={`w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center text-white text-xl shadow-lg`}>
-                    {category.icon}
-                  </div>
-                  <h3 className="font-medium text-sm">{category.name}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Results and View Controls */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold">{filteredItems.length} produtos encontrados</h2>
-              <p className="text-muted-foreground">
-                {selectedCategory !== "all" && `Categoria: ${categories.find(cat => cat.id === selectedCategory)?.name}`}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+          <div className="flex items-center gap-2 border-l pl-4 ml-4">
+            <div className="flex items-center space-x-2">
+              <Switch id="map-mode" checked={showMap} onCheckedChange={setShowMap} />
+              <Label htmlFor="map-mode" className="cursor-pointer flex items-center gap-2">
+                Mostrar mapa <MapIcon className="h-4 w-4" />
+              </Label>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Products Grid/List */}
-        {viewMode === "grid" ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                <CardContent className="p-0">
-                  <div className="relative">
-                    <div className="aspect-video bg-muted rounded-t-xl overflow-hidden">
-                      <img 
-                        src={item.image} 
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+      <main className="flex-1 flex">
+        {/* Product Grid */}
+        <div className={`flex-1 p-6 ${showMap ? 'lg:w-3/5' : 'container mx-auto'}`}>
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-semibold">
+              {items.length} resultados encontrados
+            </h1>
+            {/* Mobile Map Toggle */}
+            <Button 
+              className="md:hidden fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 rounded-full shadow-lg px-6"
+              onClick={() => setShowMap(!showMap)}
+            >
+              {showMap ? (
+                <>Lista <List className="ml-2 h-4 w-4" /></>
+              ) : (
+                <>Mapa <MapIcon className="ml-2 h-4 w-4" /></>
+              )}
+            </Button>
+          </div>
+
+          <div className={`grid gap-6 ${
+            showMap 
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' 
+              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+          }`}>
+            {items.map((item) => (
+              <Link key={item.id} to={`/produto/${item.id}`} className="group cursor-pointer">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted mb-3">
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
+                  />
+                  <button className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/10 transition-colors">
+                    <Heart className="h-6 w-6 text-white drop-shadow-md stroke-[2px]" />
+                  </button>
+                  {item.guestFavorite && (
+                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur text-xs font-semibold px-2 py-1 rounded shadow-sm">
+                      Destaque
                     </div>
-                    {item.promoted && (
-                      <Badge 
-                        variant="secondary" 
-                        className={`absolute top-3 left-3 ${
-                          item.promotionType === 'destaque' 
-                            ? 'bg-amber-500/90 text-white' 
-                            : 'bg-blue-500/90 text-white'
-                        }`}
-                      >
-                        {item.promotionType === 'destaque' ? (
-                          <><Crown className="h-3 w-3 mr-1" /> Destaque</>
-                        ) : (
-                          <><Zap className="h-3 w-3 mr-1" /> Premium</>
-                        )}
-                      </Badge>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/80 hover:bg-white"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2 line-clamp-2">{item.name}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{item.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{item.rating}</span>
-                        <span className="text-sm text-muted-foreground">({item.reviews})</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {item.category}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xl font-bold text-primary">R$ {item.price}/dia</p>
-                      <Button size="sm">
-                        Ver Item
-                      </Button>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-base truncate pr-2">{item.location}</h3>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Star className="h-3 w-3 fill-foreground" />
+                      <span>{item.rating}</span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <p className="text-muted-foreground text-sm truncate">{item.name}</p>
+                  <p className="text-muted-foreground text-sm">
+                    <span className="font-semibold text-foreground">R$ {item.price}</span> / dia
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-6">
-                    <div className="relative">
-                      <div className="w-32 h-24 bg-muted rounded-xl overflow-hidden">
-                        <img 
-                          src={item.image} 
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {item.promoted && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`absolute -top-2 -left-2 ${
-                            item.promotionType === 'destaque' 
-                              ? 'bg-amber-500/90 text-white' 
-                              : 'bg-blue-500/90 text-white'
-                          }`}
-                        >
-                          {item.promotionType === 'destaque' ? (
-                            <><Crown className="h-3 w-3 mr-1" /> Destaque</>
-                          ) : (
-                            <><Zap className="h-3 w-3 mr-1" /> Premium</>
-                          )}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg mb-2">{item.name}</h3>
-                          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>{item.location}</span>
-                          </div>
-                          <div className="flex items-center gap-4 mb-2">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm font-medium">{item.rating}</span>
-                              <span className="text-sm text-muted-foreground">({item.reviews} avaliações)</span>
-                            </div>
-                            <Badge variant="outline">
-                              {item.category}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">Por {item.owner}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-primary mb-3">R$ {item.price}/dia</p>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <Heart className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm">
-                              Ver Item
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+        </div>
+
+        {/* Map Side Panel */}
+        {showMap && (
+          <div className="hidden lg:block w-2/5 sticky top-[137px] h-[calc(100vh-137px)] bg-muted border-l">
+            <div className="h-full w-full flex items-center justify-center bg-slate-100 text-muted-foreground">
+              <div className="text-center">
+                <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Mapa interativo</p>
+                <p className="text-sm">(Em desenvolvimento)</p>
+              </div>
+            </div>
           </div>
         )}
-
-        {/* Pagination */}
-        <div className="mt-12 flex justify-center">
-          <div className="flex gap-2">
-            <Button variant="outline">Anterior</Button>
-            <Button variant="default">1</Button>
-            <Button variant="outline">2</Button>
-            <Button variant="outline">3</Button>
-            <Button variant="outline">Próximo</Button>
-          </div>
-        </div>
       </main>
 
-      <Footer />
+      {!showMap && <Footer />}
     </div>
   );
 };

@@ -183,7 +183,7 @@ const FeaturedItems = () => {
                     <div className="flex items-center space-x-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span className="font-medium">{item.rating}</span>
-                      <span className="text-sm text-muted-foreground">({item.reviews})</span>
+                      <span className="text-sm text-muted-foreground">({item.reviews} avaliações)</span>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold text-primary">
