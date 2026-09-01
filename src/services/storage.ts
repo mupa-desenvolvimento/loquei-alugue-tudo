@@ -1,96 +1,74 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-// Interface para o serviço de armazenamento
+const BUCKET = "listings";
+const MAX_BYTES = 5 * 1024 * 1024;
+
 export interface StorageService {
   uploadImage(file: File, path?: string): Promise<string>;
   deleteImage(url: string): Promise<void>;
 }
 
-// Implementação Mock (Local) para desenvolvimento sem credenciais
+/**
+ * Modo demo: gera uma URL de objeto local. Some no reload — é só para
+ * navegar pela interface sem backend.
+ */
 class LocalStorageService implements StorageService {
   async uploadImage(file: File): Promise<string> {
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    // Cria URL temporária local
+    await new Promise((resolve) => setTimeout(resolve, 600));
     return URL.createObjectURL(file);
   }
 
   async deleteImage(url: string): Promise<void> {
-    console.log(`Mock delete: ${url}`);
+    if (url.startsWith("blob:")) URL.revokeObjectURL(url);
   }
 }
 
-// Implementação Real (Cloudflare R2 via AWS SDK v3)
-class CloudflareR2Service implements StorageService {
-  private client: S3Client;
-  private bucket: string;
-  private publicUrl: string;
+/**
+ * Supabase Storage.
+ *
+ * O upload é feito com o token do próprio usuário e a policy
+ * `listing_images_write` só aceita gravação dentro de `<user_id>/`, então
+ * ninguém sobrescreve arquivo de outro. Nenhuma credencial de storage vai
+ * para o cliente — foi assim que a chave secreta do R2 vazava antes.
+ */
+class SupabaseStorageService implements StorageService {
+  async uploadImage(file: File, path = "items"): Promise<string> {
+    const client = supabase!;
 
-  constructor() {
-    const accountId = import.meta.env.VITE_R2_ACCOUNT_ID;
-    const accessKeyId = import.meta.env.VITE_R2_ACCESS_KEY_ID;
-    const secretAccessKey = import.meta.env.VITE_R2_SECRET_ACCESS_KEY;
-    this.bucket = import.meta.env.VITE_R2_BUCKET_NAME || "loquei-images";
-    this.publicUrl = import.meta.env.VITE_R2_PUBLIC_URL || "";
-
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      throw new Error("Credenciais do Cloudflare R2 não configuradas");
+    if (file.size > MAX_BYTES) {
+      throw new Error(`"${file.name}" passa de 5MB`);
+    }
+    if (!file.type.startsWith("image/")) {
+      throw new Error(`"${file.name}" não é uma imagem`);
     }
 
-    this.client = new S3Client({
-      region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
+    const { data: auth } = await client.auth.getUser();
+    if (!auth.user) throw new Error("Faça login para enviar imagens");
+
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const key = `${auth.user.id}/${path}/${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await client.storage.from(BUCKET).upload(key, file, {
+      contentType: file.type,
+      cacheControl: "31536000",
+      upsert: false,
     });
-  }
+    if (error) throw error;
 
-  async uploadImage(file: File, path: string = "uploads"): Promise<string> {
-    const fileExtension = file.name.split(".").pop();
-    const fileName = `${path}/${crypto.randomUUID()}.${fileExtension}`;
-
-    try {
-      const command = new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: fileName,
-        Body: file,
-        ContentType: file.type,
-      });
-
-      await this.client.send(command);
-
-      // Retorna a URL pública se configurada, senão a URL do R2 (que pode ser privada)
-      return this.publicUrl 
-        ? `${this.publicUrl}/${fileName}`
-        : `https://${this.bucket}.r2.cloudflarestorage.com/${fileName}`;
-    } catch (error) {
-      console.error("Erro no upload para R2:", error);
-      throw error;
-    }
+    return client.storage.from(BUCKET).getPublicUrl(key).data.publicUrl;
   }
 
   async deleteImage(url: string): Promise<void> {
-    // Extrair a key da URL seria necessário aqui
-    console.log(`Delete não implementado totalmente para: ${url}`);
+    const marker = `/${BUCKET}/`;
+    const index = url.indexOf(marker);
+    if (index === -1) return;
+
+    const key = decodeURIComponent(url.slice(index + marker.length));
+    const { error } = await supabase!.storage.from(BUCKET).remove([key]);
+    if (error) throw error;
   }
 }
 
-// Factory para decidir qual serviço usar
-function createStorageService(): StorageService {
-  const useR2 = import.meta.env.VITE_USE_R2 === "true";
-  
-  if (useR2) {
-    try {
-      return new CloudflareR2Service();
-    } catch (error) {
-      console.warn("Falha ao inicializar R2, usando armazenamento local:", error);
-      return new LocalStorageService();
-    }
-  }
-  
-  return new LocalStorageService();
-}
-
-export const storageService = createStorageService();
+export const storageService: StorageService = isSupabaseConfigured
+  ? new SupabaseStorageService()
+  : new LocalStorageService();
