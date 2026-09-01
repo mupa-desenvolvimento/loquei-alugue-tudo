@@ -35,6 +35,8 @@ interface AuthContextType {
   /** Retorna o perfil autenticado, ou null se as credenciais falharem. */
   login: (data: { email: string; password: string }) => Promise<User | null>;
   register: (data: RegisterData) => Promise<boolean>;
+  /** Redireciona para o provedor; a sessão volta pela URL de callback. */
+  signInWithProvider: (provider: "google" | "facebook", redirectTo?: string) => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -211,6 +213,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithProvider: AuthContextType["signInWithProvider"] = async (
+    provider,
+    redirectTo,
+  ) => {
+    if (!isSupabaseConfigured) {
+      toast.error("Login social indisponível no modo demo");
+      return;
+    }
+
+    const { error } = await supabase!.auth.signInWithOAuth({
+      provider,
+      options: {
+        // O provedor devolve o usuário para cá; `detectSessionInUrl` no
+        // cliente lê o token do endereço e abre a sessão.
+        redirectTo: `${window.location.origin}${redirectTo ?? "/"}`,
+      },
+    });
+
+    // Só chega aqui se falhar antes de sair da página. Provedor desligado no
+    // projeto não cai neste ramo: o navegador já foi para o Supabase, que
+    // responde com erro na própria página de destino. Por isso o botão só
+    // aparece quando o provedor está de fato habilitado — ver useAuthProviders.
+    if (error) toast.error(error.message);
+  };
+
   const updateUser: AuthContextType["updateUser"] = async (data) => {
     if (!user) return;
 
@@ -250,7 +277,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateUser }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        register,
+        signInWithProvider,
+        logout,
+        updateUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

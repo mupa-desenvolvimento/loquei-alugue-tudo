@@ -39,6 +39,31 @@ visitante. Só a URL e a chave **anon** podem ir para o `.env` — elas são pú
 design, e quem protege os dados é o RLS definido nas migrações. `service_role`, chaves
 de storage e credenciais de pagamento nunca entram no cliente.
 
+### Login com Google e Facebook
+
+Os botões de login social aparecem **apenas** quando o provedor está habilitado
+no projeto — o app consulta `/auth/v1/settings` e esconde o que não funciona.
+Enquanto nenhum estiver ligado, a tela mostra só o login por email.
+
+Para habilitar:
+
+1. Crie as credenciais OAuth no provedor:
+   - **Google**: [Google Cloud Console](https://console.cloud.google.com/apis/credentials) →
+     *Create credentials* → *OAuth client ID* → tipo *Web application*.
+   - **Facebook**: [Meta for Developers](https://developers.facebook.com/apps) →
+     novo app → produto *Facebook Login*.
+2. Em ambos, registre como URI de redirecionamento autorizada:
+   `https://<seu-projeto>.supabase.co/auth/v1/callback`
+3. No Supabase, em **Authentication → Sign In / Providers**, ative o provedor e
+   cole o *Client ID* e o *Client Secret*.
+4. Ainda em **Authentication → URL Configuration**, inclua as URLs do app
+   (`http://localhost:8080` e o domínio de produção) em *Redirect URLs*.
+
+O `Client Secret` fica só no Supabase — nunca no `.env` do front.
+
+Quem entra por login social cai no perfil `locatario` por padrão, já que o
+provedor não informa se a pessoa quer alugar ou anunciar.
+
 ## Modelo de dados
 
 | Tabela | Papel |
@@ -71,3 +96,5 @@ Centralizadas em [`src/lib/pricing.ts`](src/lib/pricing.ts):
 - **Mensagens.** As tabelas existem; a página `/mensagens` ainda usa dados de exemplo.
 - **Mapa.** A busca e a página do item mostram um placeholder no lugar do mapa.
 - **Verificação de identidade** e **conta bancária do locador**.
+- **Login social.** O código está pronto; falta criar as credenciais no Google e
+  no Facebook e ativá-las no Supabase (ver acima).

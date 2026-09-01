@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ProgressSteps, type Step } from "@/components/ui/progress-steps";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import SocialAuthButtons from "@/components/SocialAuthButtons";
 
 const loginSteps: Step[] = [
   { id: "welcome", title: "Boas-vindas", description: "Início" },
@@ -35,6 +35,9 @@ const Login = () => {
     setCompletedSteps(prev => prev.filter(id => id !== stepId));
   };
 
+  // Rota que o usuário tentou abrir antes de cair no login, quando houver.
+  const origem = (location.state as { from?: string } | null)?.from;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -43,9 +46,8 @@ const Login = () => {
 
     handleNextStep("verification");
     // A rota de origem vence; sem ela, cai no painel do perfil do usuário.
-    const from = (location.state as { from?: string } | null)?.from;
     const painel = profile.profile === "locador" ? "/painel-locador" : "/painel-locatario";
-    navigate(from ?? painel, { replace: true });
+    navigate(origem ?? painel, { replace: true });
   };
 
   return (
@@ -95,16 +97,7 @@ const Login = () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
 
-                  <Separator className="my-6" />
-
-                  <div className="space-y-3">
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
-                      Continuar com Google
-                    </Button>
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
-                      Continuar com Facebook
-                    </Button>
-                  </div>
+                  <SocialAuthButtons verbo="Continuar" redirectTo={origem} />
                 </div>
 
                 <div className="text-center pt-4">

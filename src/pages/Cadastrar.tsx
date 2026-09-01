@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import SocialAuthButtons from "@/components/SocialAuthButtons";
 import type { UserProfile, UserType } from "@/types/database";
 import { toast } from "sonner";
 
@@ -160,16 +160,7 @@ const Cadastrar = () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
 
-                  <Separator className="my-6" />
-
-                  <div className="space-y-3">
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
-                      Cadastrar com Google
-                    </Button>
-                    <Button variant="outline" className="w-full h-12 rounded-2xl border-2">
-                      Cadastrar com Facebook
-                    </Button>
-                  </div>
+                  <SocialAuthButtons verbo="Cadastrar" />
                 </div>
 
                 <div className="text-center pt-4">
