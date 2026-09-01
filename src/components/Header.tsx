@@ -1,8 +1,9 @@
 import { Search, User, Menu, Heart, MessageCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyNotifications } from "@/hooks/useNotifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,6 +16,14 @@ import {
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { data: notifications = [] } = useMyNotifications(user?.id);
+  const unread = notifications.filter((n) => !n.read_at).length;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -90,6 +99,16 @@ const Header = () => {
                       <Link to="/mensagens">Mensagens</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="font-semibold py-3" asChild>
+                      <Link to="/notificacoes">
+                        Notificações
+                        {unread > 0 && (
+                          <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                            {unread}
+                          </span>
+                        )}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="font-semibold py-3" asChild>
                       <Link to="/favoritos">Favoritos</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="font-semibold py-3" asChild>
@@ -111,11 +130,19 @@ const Header = () => {
                         Conta
                       </Link>
                     </DropdownMenuItem>
+                    {user.role === "admin" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="font-semibold py-3" asChild>
+                          <Link to="/admin">Administração</Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="py-3" asChild>
                       <Link to="/como-funciona">Central de Ajuda</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="py-3" onClick={logout}>
+                    <DropdownMenuItem className="py-3" onClick={handleLogout}>
                       Sair
                     </DropdownMenuItem>
                   </>

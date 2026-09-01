@@ -18,8 +18,22 @@ import ProdutoDetalhe from "./pages/ProdutoDetalhe";
 import Checkout from "./pages/Checkout";
 import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import Admin from "./pages/Admin";
+import Notificacoes from "./pages/Notificacoes";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const protect = (element: JSX.Element) => <ProtectedRoute>{element}</ProtectedRoute>;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,18 +44,24 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/anunciar" element={<Anunciar />} />
             <Route path="/como-funciona" element={<ComoFunciona />} />
-            <Route path="/favoritos" element={<Favoritos />} />
-            <Route path="/mensagens" element={<Mensagens />} />
             <Route path="/buscar" element={<Buscar />} />
             <Route path="/entrar" element={<Login />} />
             <Route path="/cadastrar" element={<Cadastrar />} />
-            <Route path="/painel-locador" element={<PainelLocador />} />
-            <Route path="/painel-locatario" element={<PainelLocatario />} />
             <Route path="/produto/:id" element={<ProdutoDetalhe />} />
-            <Route path="/checkout/:productId" element={<Checkout />} />
-            <Route path="/perfil" element={<Perfil />} />
+
+            {/* Exigem sessão */}
+            <Route path="/anunciar" element={protect(<Anunciar />)} />
+            <Route path="/favoritos" element={protect(<Favoritos />)} />
+            <Route path="/mensagens" element={protect(<Mensagens />)} />
+            <Route path="/painel-locador" element={protect(<PainelLocador />)} />
+            <Route path="/painel-locatario" element={protect(<PainelLocatario />)} />
+            <Route path="/checkout/:productId" element={protect(<Checkout />)} />
+            <Route path="/perfil" element={protect(<Perfil />)} />
+            <Route path="/notificacoes" element={protect(<Notificacoes />)} />
+
+            {/* Administração */}
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
