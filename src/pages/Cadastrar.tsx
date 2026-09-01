@@ -10,6 +10,7 @@ import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, Building, Phone, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import type { UserProfile, UserType } from "@/types/database";
 import { toast } from "sonner";
 
 const registerSteps: Step[] = [
@@ -28,8 +29,8 @@ const Cadastrar = () => {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userProfile, setUserProfile] = useState(""); // locatario ou locador
-  const [userType, setUserType] = useState("pf");
+  const [userProfile, setUserProfile] = useState<UserProfile | "">("");
+  const [userType, setUserType] = useState<UserType>("pf");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -84,6 +85,11 @@ const Cadastrar = () => {
     
     if (!acceptTerms) {
       toast.error("Você precisa aceitar os termos de uso!");
+      return;
+    }
+
+    if (!userProfile) {
+      toast.error("Escolha se você quer alugar ou anunciar");
       return;
     }
     
@@ -196,7 +202,7 @@ const Cadastrar = () => {
                   </div>
                 </div>
 
-                <RadioGroup value={userProfile} onValueChange={setUserProfile} className="space-y-4">
+                <RadioGroup value={userProfile} onValueChange={(value) => setUserProfile(value as UserProfile)} className="space-y-4">
                   <div className="flex items-center space-x-3 p-6 border-2 rounded-2xl hover:border-primary transition-colors cursor-pointer">
                     <RadioGroupItem value="locatario" id="locatario" />
                     <Label htmlFor="locatario" className="flex-1 cursor-pointer">
@@ -275,7 +281,7 @@ const Cadastrar = () => {
                   </div>
                 </div>
 
-                <RadioGroup value={userType} onValueChange={setUserType} className="space-y-4">
+                <RadioGroup value={userType} onValueChange={(value) => setUserType(value as UserType)} className="space-y-4">
                   <div className="flex items-center space-x-3 p-4 border-2 rounded-2xl hover:border-primary transition-colors">
                     <RadioGroupItem value="pf" id="pf" />
                     <Label htmlFor="pf" className="flex-1 cursor-pointer">

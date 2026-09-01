@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProgressSteps, type Step } from "@/components/ui/progress-steps";
-import { Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSteps: Step[] = [
   { id: "welcome", title: "Boas-vindas", description: "Início" },
@@ -15,6 +16,9 @@ const loginSteps: Step[] = [
 ];
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState("welcome");
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,11 +35,17 @@ const Login = () => {
     setCompletedSteps(prev => prev.filter(id => id !== stepId));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar lógica de login
-    console.log("Login attempt:", { email, password });
+
+    const profile = await login({ email, password });
+    if (!profile) return;
+
     handleNextStep("verification");
+    // A rota de origem vence; sem ela, cai no painel do perfil do usuário.
+    const from = (location.state as { from?: string } | null)?.from;
+    const painel = profile.profile === "locador" ? "/painel-locador" : "/painel-locatario";
+    navigate(from ?? painel, { replace: true });
   };
 
   return (
@@ -177,12 +187,22 @@ const Login = () => {
                   </div>
 
                   {/* Login Button */}
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
                     className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent shadow-modern"
                   >
-                    Entrar na minha conta
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      <>
+                        Entrar na minha conta
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </form>
               </div>

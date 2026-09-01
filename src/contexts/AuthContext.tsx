@@ -1,135 +1,257 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import type { Profile, UserProfile, UserRole, UserType } from "@/types/database";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  type: "pf" | "pj";
-  profile: "locador" | "locatario";
+  type: UserType;
+  profile: UserProfile;
   phone?: string;
   companyName?: string;
   cnpj?: string;
   avatar?: string;
+  role: UserRole;
+  isBlocked: boolean;
+}
+
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  type: UserType;
+  profile: UserProfile;
+  companyName?: string;
+  cnpj?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: any) => Promise<boolean>;
-  register: (data: any) => Promise<boolean>;
+  /** Retorna o perfil autenticado, ou null se as credenciais falharem. */
+  login: (data: { email: string; password: string }) => Promise<User | null>;
+  register: (data: RegisterData) => Promise<boolean>;
   updateUser: (data: Partial<User>) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const DEMO_KEY = "loquei_demo_user";
+
+function fromProfile(row: Profile): User {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    type: row.type,
+    profile: row.profile,
+    phone: row.phone ?? undefined,
+    companyName: row.company_name ?? undefined,
+    cnpj: row.cnpj ?? undefined,
+    avatar: row.avatar_url ?? undefined,
+    role: row.role,
+    isBlocked: Boolean(row.blocked_at),
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("loquei_user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Erro ao carregar usuário:", error);
-        localStorage.removeItem("loquei_user");
-      }
+  const loadProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase!
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao carregar perfil:", error);
+      return null;
     }
-    setIsLoading(false);
+    return data ? fromProfile(data as Profile) : null;
   }, []);
 
-  const login = async (data: any) => {
+  // Restaura a sessão e reage a login/logout em outras abas.
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      const stored = localStorage.getItem(DEMO_KEY);
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          localStorage.removeItem(DEMO_KEY);
+        }
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    supabase!.auth.getSession().then(async ({ data }) => {
+      if (!active) return;
+      setUser(data.session ? await loadProfile(data.session.user.id) : null);
+      setIsLoading(false);
+    });
+
+    const { data: sub } = supabase!.auth.onAuthStateChange(async (_event, session) => {
+      if (!active) return;
+      setUser(session ? await loadProfile(session.user.id) : null);
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [loadProfile]);
+
+  const login: AuthContextType["login"] = async ({ email, password }) => {
     setIsLoading(true);
     try {
-      // Simulação de delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const users = JSON.parse(localStorage.getItem("loquei_users") || "[]");
-      const foundUser = users.find((u: any) => u.email === data.email && u.password === data.password);
-      
-      if (foundUser) {
-        const { password, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        localStorage.setItem("loquei_user", JSON.stringify(userWithoutPassword));
-        toast.success("Login realizado com sucesso!");
-        return true;
+      if (!isSupabaseConfigured) {
+        const demo: User = {
+          id: "demo-user",
+          name: email.split("@")[0],
+          email,
+          type: "pf",
+          profile: "locatario",
+          role: "user",
+          isBlocked: false,
+        };
+        setUser(demo);
+        localStorage.setItem(DEMO_KEY, JSON.stringify(demo));
+        toast.success("Entrou em modo demo (sem backend configurado)");
+        return demo;
       }
-      
-      toast.error("Email ou senha incorretos");
-      return false;
-    } catch (error) {
-      toast.error("Erro ao realizar login");
-      return false;
+
+      const { data, error } = await supabase!.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(
+          error.message === "Invalid login credentials"
+            ? "Email ou senha incorretos"
+            : error.message,
+        );
+        return null;
+      }
+
+      const profile = await loadProfile(data.user.id);
+      setUser(profile);
+      toast.success("Login realizado com sucesso!");
+      return profile;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (userData: any) => {
+  const register: AuthContextType["register"] = async (data) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const users = JSON.parse(localStorage.getItem("loquei_users") || "[]");
-      
-      if (users.some((u: any) => u.email === userData.email)) {
-        toast.error("Email já cadastrado");
+      if (!isSupabaseConfigured) {
+        const demo: User = {
+          id: "demo-user",
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          profile: data.profile,
+          phone: data.phone,
+          companyName: data.companyName,
+          cnpj: data.cnpj,
+          role: "user",
+          isBlocked: false,
+        };
+        setUser(demo);
+        localStorage.setItem(DEMO_KEY, JSON.stringify(demo));
+        toast.success("Conta demo criada (sem backend configurado)");
+        return true;
+      }
+
+      // A senha vai direto para o GoTrue, que guarda só o hash.
+      // O trigger `on_auth_user_created` cria a linha em `profiles`.
+      const { data: signUp, error } = await supabase!.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            type: data.type,
+            profile: data.profile,
+            phone: data.phone ?? null,
+            company_name: data.companyName ?? null,
+            cnpj: data.cnpj ?? null,
+          },
+        },
+      });
+
+      if (error) {
+        toast.error(
+          error.message.includes("already registered")
+            ? "Email já cadastrado"
+            : error.message,
+        );
         return false;
       }
 
-      const newUser = { 
-        id: crypto.randomUUID(), 
-        ...userData,
-        createdAt: new Date().toISOString()
-      };
-      
-      users.push(newUser);
-      localStorage.setItem("loquei_users", JSON.stringify(users));
-      
-      // Auto-login após cadastro
-      const { password, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem("loquei_user", JSON.stringify(userWithoutPassword));
-      
+      // Com confirmação de email ligada no projeto, ainda não há sessão.
+      if (!signUp.session) {
+        toast.success("Conta criada! Confirme o email para entrar.");
+        return true;
+      }
+
+      setUser(await loadProfile(signUp.user!.id));
       toast.success("Conta criada com sucesso!");
       return true;
-    } catch (error) {
-      console.error("Erro no registro:", error);
-      toast.error("Erro ao criar conta. Tente novamente.");
-      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateUser = async (data: Partial<User>) => {
+  const updateUser: AuthContextType["updateUser"] = async (data) => {
     if (!user) return;
-    
-    const updatedUser = { ...user, ...data };
-    setUser(updatedUser);
-    localStorage.setItem("loquei_user", JSON.stringify(updatedUser));
-    
-    // Atualizar na lista de usuários
-    const users = JSON.parse(localStorage.getItem("loquei_users") || "[]");
-    const updatedUsers = users.map((u: any) => 
-      u.email === user.email ? { ...u, ...data } : u
-    );
-    localStorage.setItem("loquei_users", JSON.stringify(updatedUsers));
+
+    const next = { ...user, ...data };
+    setUser(next);
+
+    if (!isSupabaseConfigured) {
+      localStorage.setItem(DEMO_KEY, JSON.stringify(next));
+      return;
+    }
+
+    const { error } = await supabase!
+      .from("profiles")
+      .update({
+        name: next.name,
+        phone: next.phone ?? null,
+        company_name: next.companyName ?? null,
+        cnpj: next.cnpj ?? null,
+        avatar_url: next.avatar ?? null,
+        profile: next.profile,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      toast.error("Não foi possível salvar o perfil");
+      setUser(user); // desfaz o update otimista
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (isSupabaseConfigured) await supabase!.auth.signOut();
+    localStorage.removeItem(DEMO_KEY);
     setUser(null);
-    localStorage.removeItem("loquei_user");
     toast.info("Você saiu da conta");
-    window.location.href = "/";
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
