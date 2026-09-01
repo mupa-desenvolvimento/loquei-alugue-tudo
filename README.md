@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# Loquei
 
-## Project info
+Marketplace peer-to-peer de aluguel de itens: quem tem uma furadeira parada anuncia,
+quem precisa dela por um fim de semana aluga.
 
-**URL**: https://lovable.dev/projects/10210a8b-03fd-4d18-98b1-1ef7738a70c8
+Stack: Vite + React + TypeScript + Tailwind + shadcn/ui, com Supabase (Postgres, Auth
+e Storage) como backend.
 
-## How can I edit this code?
+## Rodando localmente
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/10210a8b-03fd-4d18-98b1-1ef7738a70c8) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O app sobe em `http://localhost:8080` e funciona em **modo demo** sem nenhuma
+configuração: dados de exemplo, login local, nada persistido. Serve para navegar pela
+interface, não para uso real.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Conectando o backend
 
-**Use GitHub Codespaces**
+1. Crie um projeto em [supabase.com](https://supabase.com).
+2. No **SQL Editor**, rode na ordem os arquivos de `supabase/migrations/`:
+   - `0001_init.sql` — tabelas, triggers, políticas de RLS e o bucket de imagens;
+   - `0002_search_unaccent.sql` — busca que ignora acentos.
+3. Copie `.env.example` para `.env` e preencha com os valores de **Project Settings → API**:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+   ```
+   VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+   VITE_SUPABASE_ANON_KEY=...
+   ```
 
-## What technologies are used for this project?
+4. Reinicie o `npm run dev`. O app detecta as variáveis e passa a usar o Supabase.
 
-This project is built with:
+### Sobre segredos
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Tudo com prefixo `VITE_` é embutido no bundle JavaScript e fica visível para qualquer
+visitante. Só a URL e a chave **anon** podem ir para o `.env` — elas são públicas por
+design, e quem protege os dados é o RLS definido nas migrações. `service_role`, chaves
+de storage e credenciais de pagamento nunca entram no cliente.
 
-## How can I deploy this project?
+## Modelo de dados
 
-Simply open [Lovable](https://lovable.dev/projects/10210a8b-03fd-4d18-98b1-1ef7738a70c8) and click on Share -> Publish.
+| Tabela | Papel |
+| --- | --- |
+| `profiles` | Espelha `auth.users`; dados públicos do usuário. Senha só existe em `auth.users`. |
+| `categories` | Categorias fixas dos anúncios. |
+| `listings` | Anúncios: preço/dia, caução, fotos, localização, status e nota média. |
+| `bookings` | Reservas, do pedido à devolução (`pending → confirmed → active → returned`). |
+| `reviews` | Avaliação por reserva; recalcula a nota do anúncio via trigger. |
+| `favorites` | Itens salvos por usuário. |
+| `conversations` / `messages` | Chat entre locador e locatário. |
 
-## Can I connect a custom domain to my Lovable project?
+RLS está ativo em todas as tabelas: anúncios ativos são públicos, reservas só aparecem
+para as duas partes envolvidas, favoritos são privados e só quem alugou (e devolveu)
+pode avaliar.
 
-Yes, you can!
+## Regras de preço
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Centralizadas em [`src/lib/pricing.ts`](src/lib/pricing.ts):
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- taxa de serviço do locatário: 12%
+- proteção do item: 8%
+- comissão do locador: 10%, descontada do repasse
+- caução: bloqueada, não cobrada — volta se o item retornar sem danos
+
+## O que ainda não existe
+
+- **Pagamento.** O checkout cria a reserva, mas nenhum valor é cobrado — falta integrar
+  um gateway (os dados de cartão devem ser coletados pelo provedor, nunca por uma tela nossa).
+- **Mensagens.** As tabelas existem; a página `/mensagens` ainda usa dados de exemplo.
+- **Mapa.** A busca e a página do item mostram um placeholder no lugar do mapa.
+- **Verificação de identidade** e **conta bancária do locador**.
