@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { storageService } from "@/services/storage";
 import { toast } from "sonner";
@@ -9,41 +10,66 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Plus, 
-  Package, 
-  Star, 
-  Eye, 
-  MessageSquare, 
-  DollarSign, 
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Plus,
+  Package,
+  Star,
+  MessageSquare,
+  DollarSign,
   TrendingUp,
   Calendar,
-  Users,
-  Crown,
-  Zap,
   Camera,
   CreditCard,
-  User
+  User,
+  Check,
+  X,
 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useMyListings, useUpdateListingStatus } from "@/hooks/useListings";
+import { useReceivedBookings, useUpdateBookingStatus } from "@/hooks/useBookings";
+import { formatBRL, OWNER_COMMISSION_RATE } from "@/lib/pricing";
+import type { BookingStatus } from "@/types/database";
+
+const STATUS_LABEL: Record<BookingStatus, string> = {
+  pending: "Aguardando você",
+  confirmed: "Confirmada",
+  active: "Em andamento",
+  returned: "Devolvida",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+  rejected: "Recusada",
+};
 
 const PainelLocador = () => {
   const { user, updateUser } = useAuth();
-  const [selectedPromotion, setSelectedPromotion] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const { data: listings = [], isLoading: loadingListings } = useMyListings(user?.id);
+  const { data: bookings = [], isLoading: loadingBookings } = useReceivedBookings(user?.id);
+  const updateListingStatus = useUpdateListingStatus();
+  const updateBookingStatus = useUpdateBookingStatus();
+
+  const pending = bookings.filter((booking) => booking.status === "pending");
+
+  // Receita = repasse ao locador nas reservas já concluídas.
+  const stats = useMemo(() => {
+    const settled = bookings.filter((b) => b.status === "completed" || b.status === "returned");
+    const revenue = settled.reduce((sum, b) => sum + b.subtotal * (1 - OWNER_COMMISSION_RATE), 0);
+    const active = bookings.filter((b) => b.status === "active" || b.status === "confirmed").length;
+    const accepted = bookings.filter((b) => b.status !== "rejected" && b.status !== "pending").length;
+
+    return {
+      revenue,
+      active,
+      conversion: bookings.length ? (accepted / bookings.length) * 100 : 0,
+    };
+  }, [bookings]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande (máx 5MB)");
-      return;
-    }
 
     setUploadingAvatar(true);
     try {
@@ -52,300 +78,256 @@ const PainelLocador = () => {
       toast.success("Foto de perfil atualizada!");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao atualizar foto de perfil");
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar foto");
     } finally {
       setUploadingAvatar(false);
+      e.target.value = "";
     }
   };
 
-  const mockItems = [
-    {
-      id: 1,
-      name: "Furadeira Professional",
-      category: "Ferramentas",
-      price: 25,
-      views: 342,
-      likes: 18,
-      messages: 5,
-      status: "Ativo",
-      promoted: false
-    },
-    {
-      id: 2,
-      name: "Câmera DSLR Canon",
-      category: "Eletrônicos",
-      price: 80,
-      views: 567,
-      likes: 45,
-      messages: 12,
-      status: "Ativo",
-      promoted: true
-    }
-  ];
-
-  const promotionPlans = [
-    {
-      id: "destaque",
-      name: "Destaque Principal",
-      price: 29.90,
-      duration: "7 dias",
-      benefits: ["Banner principal", "Primeiro nos resultados", "Badge especial"],
-      icon: <Crown className="h-6 w-6" />
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: 19.90,
-      duration: "7 dias",
-      benefits: ["Destaque nas categorias", "3x mais visibilidade"],
-      icon: <Zap className="h-6 w-6" />
-    }
-  ];
+  const respondToBooking = (id: string, status: BookingStatus) => {
+    updateBookingStatus.mutate(
+      { id, status },
+      {
+        onSuccess: () =>
+          toast.success(status === "confirmed" ? "Reserva confirmada!" : "Solicitação recusada"),
+        onError: () => toast.error("Não foi possível atualizar a reserva"),
+      },
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Painel do Locador</h1>
-          <p className="text-muted-foreground">Gerencie seus anúncios e promova seus produtos</p>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Painel do Locador</h1>
+            <p className="text-muted-foreground">Gerencie seus anúncios e as solicitações recebidas</p>
+          </div>
+          <Button asChild className="gap-2">
+            <Link to="/anunciar">
+              <Plus className="h-4 w-4" />
+              Novo anúncio
+            </Link>
+          </Button>
         </div>
 
         <Tabs defaultValue="produtos" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="produtos">Meus Produtos</TabsTrigger>
-            <TabsTrigger value="promocoes">Promoções</TabsTrigger>
-            <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="produtos">Meus anúncios</TabsTrigger>
+            <TabsTrigger value="solicitacoes">
+              Solicitações
+              {pending.length > 0 && (
+                <Badge className="ml-2 px-1.5 py-0 text-[10px]">{pending.length}</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="perfil">Meu Perfil</TabsTrigger>
+            <TabsTrigger value="perfil">Meu perfil</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="produtos" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Meus Produtos</h2>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Novo Produto
-              </Button>
-            </div>
+          {/* Anúncios */}
+          <TabsContent value="produtos" className="space-y-4">
+            {loadingListings && <Skeleton className="h-28 w-full rounded-xl" />}
 
-            <div className="grid gap-4">
-              {mockItems.map((item) => (
-                <Card key={item.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-muted rounded-xl flex items-center justify-center">
+            {!loadingListings && listings.length === 0 && (
+              <Card>
+                <CardContent className="py-16 text-center">
+                  <Package className="h-10 w-10 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="font-medium mb-1">Você ainda não tem anúncios</p>
+                  <p className="text-muted-foreground text-sm mb-6">
+                    Publique o primeiro item e comece a receber solicitações.
+                  </p>
+                  <Button asChild>
+                    <Link to="/anunciar">Anunciar item</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {listings.map((item) => (
+              <Card key={item.id}>
+                <CardContent className="p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-muted rounded-xl overflow-hidden flex items-center justify-center shrink-0">
+                        {item.images[0] ? (
+                          <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
+                        ) : (
                           <Package className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">{item.name}</h3>
-                          <p className="text-muted-foreground">{item.category}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm flex items-center gap-1">
-                              <Eye className="h-4 w-4" />
-                              {item.views}
-                            </span>
-                            <span className="text-sm flex items-center gap-1">
-                              <Star className="h-4 w-4" />
-                              {item.likes}
-                            </span>
-                            <span className="text-sm flex items-center gap-1">
-                              <MessageSquare className="h-4 w-4" />
-                              {item.messages}
-                            </span>
-                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{item.title}</h3>
+                        <p className="text-muted-foreground">{item.category?.name}</p>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Star className="h-4 w-4" />
+                            {item.rating_count > 0 ? `${item.rating_avg} (${item.rating_count})` : "sem avaliações"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {(() => {
+                              const total = bookings.filter((b) => b.listing_id === item.id).length;
+                              return `${total} ${total === 1 ? "reserva" : "reservas"}`;
+                            })()}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">R$ {item.price}/dia</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant={item.status === "Ativo" ? "default" : "secondary"}>
-                            {item.status}
-                          </Badge>
-                          {item.promoted && (
-                            <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">
-                              <Crown className="h-3 w-3 mr-1" />
-                              Promovido
-                            </Badge>
-                          )}
-                        </div>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          Editar
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">
+                        {formatBRL(item.price_per_day)}<span className="text-sm font-normal">/dia</span>
+                      </p>
+                      <Badge variant={item.status === "active" ? "default" : "secondary"} className="mt-2">
+                        {item.status === "active" ? "Ativo" : item.status === "paused" ? "Pausado" : "Rascunho"}
+                      </Badge>
+                      <div className="flex gap-2 mt-2 justify-end">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/produto/${item.id}`}>Ver</Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            updateListingStatus.mutate({
+                              id: item.id,
+                              status: item.status === "active" ? "paused" : "active",
+                            })
+                          }
+                        >
+                          {item.status === "active" ? "Pausar" : "Reativar"}
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="promocoes" className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Promover Produtos</h2>
-              <p className="text-muted-foreground mb-6">
-                Aumente a visibilidade dos seus produtos e apareça em destaque no marketplace
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {promotionPlans.map((plan) => (
-                <Card key={plan.id} className="relative">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                        {plan.icon}
-                      </div>
-                      <div>
-                        <CardTitle>{plan.name}</CardTitle>
-                        <CardDescription>{plan.duration}</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="text-3xl font-bold text-primary">
-                        R$ {plan.price}
-                      </div>
-                      <ul className="space-y-2">
-                        {plan.benefits.map((benefit, index) => (
-                          <li key={index} className="flex items-center gap-2 text-sm">
-                            <div className="w-2 h-2 bg-primary rounded-full" />
-                            {benefit}
-                          </li>
-                        ))}
-                      </ul>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="w-full" onClick={() => setSelectedPromotion(plan.id)}>
-                            Promover Agora
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Promover Produto</DialogTitle>
-                            <DialogDescription>
-                              Selecione o produto que deseja promover com o plano {plan.name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="product-select">Produto</Label>
-                              <Select>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um produto" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {mockItems.map((item) => (
-                                    <SelectItem key={item.id} value={item.id.toString()}>
-                                      {item.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="bg-muted/50 p-4 rounded-xl">
-                              <h4 className="font-semibold mb-2">Resumo do Plano</h4>
-                              <div className="text-sm space-y-1">
-                                <p>Plano: {plan.name}</p>
-                                <p>Duração: {plan.duration}</p>
-                                <p className="font-semibold">Total: R$ {plan.price}</p>
-                              </div>
-                            </div>
-                            <Button className="w-full">
-                              Confirmar Promoção
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="mensagens" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mensagens Recentes</CardTitle>
-                <CardDescription>Conversas com locatários interessados</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 border rounded-xl">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold">João Silva</h4>
-                      <p className="text-sm text-muted-foreground">Interesse em: Câmera DSLR Canon</p>
-                      <p className="text-xs text-muted-foreground">Há 2 horas</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Responder
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </TabsContent>
 
+          {/* Solicitações */}
+          <TabsContent value="solicitacoes" className="space-y-4">
+            {loadingBookings && <Skeleton className="h-24 w-full rounded-xl" />}
+
+            {!loadingBookings && bookings.length === 0 && (
+              <Card>
+                <CardContent className="py-16 text-center text-muted-foreground">
+                  <MessageSquare className="h-10 w-10 mx-auto mb-4 opacity-50" />
+                  <p>Nenhuma solicitação por enquanto.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {bookings.map((booking) => (
+              <Card key={booking.id}>
+                <CardContent className="p-6 flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold">{booking.listing?.title ?? "Item removido"}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {format(parseISO(booking.start_date), "d 'de' MMM", { locale: ptBR })} —{" "}
+                      {format(parseISO(booking.end_date), "d 'de' MMM", { locale: ptBR })}
+                    </p>
+                    <Badge variant="secondary" className="mt-2">
+                      {STATUS_LABEL[booking.status]}
+                    </Badge>
+                  </div>
+
+                  <div className="text-right space-y-2">
+                    <p className="text-lg font-bold">{formatBRL(booking.subtotal)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Você recebe {formatBRL(booking.subtotal * (1 - OWNER_COMMISSION_RATE))}
+                    </p>
+                    {booking.status === "pending" && (
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          onClick={() => respondToBooking(booking.id, "confirmed")}
+                          disabled={updateBookingStatus.isPending}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Aceitar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => respondToBooking(booking.id, "rejected")}
+                          disabled={updateBookingStatus.isPending}
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Recusar
+                        </Button>
+                      </div>
+                    )}
+                    {booking.status === "confirmed" && (
+                      <Button size="sm" variant="outline" onClick={() => respondToBooking(booking.id, "active")}>
+                        Marcar como retirado
+                      </Button>
+                    )}
+                    {booking.status === "active" && (
+                      <Button size="sm" variant="outline" onClick={() => respondToBooking(booking.id, "returned")}>
+                        Confirmar devolução
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+
+          {/* Financeiro */}
           <TabsContent value="financeiro" className="space-y-6">
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
+                  <CardTitle className="text-sm font-medium">Recebido (líquido)</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">R$ 1.245,00</div>
+                  <div className="text-2xl font-bold">{formatBRL(stats.revenue)}</div>
                   <p className="text-xs text-muted-foreground">
-                    +20.1% em relação ao mês passado
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Locações Ativas</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">12</div>
-                  <p className="text-xs text-muted-foreground">
-                    +3 novas esta semana
+                    Já descontada a comissão de {OWNER_COMMISSION_RATE * 100}%
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+                  <CardTitle className="text-sm font-medium">Locações ativas</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.active}</div>
+                  <p className="text-xs text-muted-foreground">Confirmadas ou em andamento</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Taxa de aceite</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">23.5%</div>
-                  <p className="text-xs text-muted-foreground">
-                    +2.1% em relação ao mês passado
-                  </p>
+                  <div className="text-2xl font-bold">{stats.conversion.toFixed(1)}%</div>
+                  <p className="text-xs text-muted-foreground">Solicitações que viraram reserva</p>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
+          {/* Perfil */}
           <TabsContent value="perfil" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Informações do Perfil</CardTitle>
-                <CardDescription>Gerencie suas informações pessoais e de locador</CardDescription>
+                <CardTitle>Informações do perfil</CardTitle>
+                <CardDescription>Seus dados públicos como locador</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="relative group">
-                    <Avatar className="w-20 h-20 border-2 border-border cursor-pointer transition-all hover:border-primary">
+                    <Avatar className="w-20 h-20 border-2 border-border">
                       <AvatarImage src={user?.avatar} className="object-cover" />
                       <AvatarFallback className="text-lg bg-muted">
                         {user?.name?.substring(0, 2).toUpperCase() || "LO"}
@@ -353,53 +335,51 @@ const PainelLocador = () => {
                     </Avatar>
                     <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       {uploadingAvatar ? (
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                       ) : (
                         <Camera className="text-white h-6 w-6" />
                       )}
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept="image/*" 
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
                         onChange={handleAvatarUpload}
                         disabled={uploadingAvatar}
                       />
                     </label>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">{user?.name || "Locador"}</h3>
-                    <p className="text-muted-foreground">{user?.email || "email@exemplo.com"}</p>
-                    <div className="flex gap-2 mt-2">
-                      <Button variant="outline" size="sm">
-                        Editar Perfil
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Ver Perfil Público
-                      </Button>
-                    </div>
+                    <h3 className="text-xl font-semibold">{user?.name}</h3>
+                    <p className="text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Estatísticas do Locador</CardTitle>
+                      <CardTitle className="text-base">Seus números</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total de Locações</span>
-                        <span className="font-medium">45</span>
+                        <span className="text-muted-foreground">Anúncios publicados</span>
+                        <span className="font-medium">{listings.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total de reservas</span>
+                        <span className="font-medium">{bookings.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Avaliação média</span>
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">4.9</span>
+                          <span className="font-medium">
+                            {listings.length
+                              ? (
+                                  listings.reduce((sum, l) => sum + l.rating_avg, 0) / listings.length
+                                ).toFixed(1)
+                              : "—"}
+                          </span>
                         </div>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tempo de resposta</span>
-                        <span className="font-medium">~ 1 hora</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -409,17 +389,13 @@ const PainelLocador = () => {
                       <CardTitle className="text-base">Configurações</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button variant="outline" className="w-full justify-start" disabled>
                         <CreditCard className="h-4 w-4 mr-2" />
-                        Dados Bancários
+                        Dados bancários (em breve)
                       </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Notificações de Aluguel
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
+                      <Button variant="outline" className="w-full justify-start" disabled>
                         <User className="h-4 w-4 mr-2" />
-                        Verificação de Identidade
+                        Verificação de identidade (em breve)
                       </Button>
                     </CardContent>
                   </Card>

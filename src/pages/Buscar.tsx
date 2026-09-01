@@ -1,133 +1,125 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ListingCard from "@/components/ListingCard";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { 
-  Map as MapIcon, 
-  List, 
-  Heart, 
-  Star, 
-  SlidersHorizontal, 
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Map as MapIcon,
+  List,
+  Search,
+  SlidersHorizontal,
   ChevronDown,
-  MapPin
+  MapPin,
+  PackageOpen,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCategories, useListings } from "@/hooks/useListings";
+
+const MAX_PRICE = 1000;
 
 const Buscar = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showMap, setShowMap] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 500]);
 
-  // Mock data aligned with Index.tsx style but more comprehensive
-  const items = [
-    {
-      id: 1,
-      name: "Furadeira Professional Bosch",
-      category: "Ferramentas",
-      price: 25,
-      rating: 4.8,
-      reviews: 32,
-      location: "São Paulo, SP",
-      image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -23.550520, lng: -46.633308 },
-      guestFavorite: true
-    },
-    {
-      id: 2,
-      name: "Câmera DSLR Canon EOS",
-      category: "Eletrônicos",
-      price: 80,
-      rating: 4.9,
-      reviews: 18,
-      location: "Rio de Janeiro, RJ", 
-      image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -22.906847, lng: -43.172896 },
-      guestFavorite: false
-    },
-    {
-      id: 3,
-      name: "Serra Circular Profissional",
-      category: "Ferramentas",
-      price: 45,
-      rating: 4.7,
-      reviews: 24,
-      location: "Belo Horizonte, MG",
-      image: "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -19.916681, lng: -43.934493 },
-      guestFavorite: true
-    },
-    {
-      id: 4,
-      name: "Projetor Full HD 3000 Lumens",
-      category: "Eletrônicos",
-      price: 60,
-      rating: 4.6,
-      reviews: 15,
-      location: "Salvador, BA",
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -12.977749, lng: -38.501630 },
-      guestFavorite: false
-    },
-    {
-      id: 5,
-      name: "Kit Ferramentas Completo",
-      category: "Ferramentas",
-      price: 35,
-      rating: 4.5,
-      reviews: 10,
-      location: "Curitiba, PR",
-      image: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -25.4284, lng: -49.2733 },
-      guestFavorite: false
-    },
-    {
-      id: 6,
-      name: "Caixa de Som JBL PartyBox",
-      category: "Eventos",
-      price: 120,
-      rating: 4.9,
-      reviews: 45,
-      location: "Florianópolis, SC",
-      image: "https://images.unsplash.com/photo-1545459720-aac3e5ca9678?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      coordinates: { lat: -27.5959, lng: -48.5480 },
-      guestFavorite: true
-    }
-  ];
+  // A busca e a categoria vivem na URL: o resultado fica compartilhável.
+  const q = searchParams.get("q") ?? "";
+  const category = searchParams.get("categoria") ?? "all";
+  const [term, setTerm] = useState(q);
+
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, MAX_PRICE]);
+  const [appliedPrice, setAppliedPrice] = useState<[number, number]>([0, MAX_PRICE]);
+
+  const { data: categories = [] } = useCategories();
+  const filters = useMemo(
+    () => ({
+      q: q || undefined,
+      category,
+      minPrice: appliedPrice[0] > 0 ? appliedPrice[0] : undefined,
+      maxPrice: appliedPrice[1] < MAX_PRICE ? appliedPrice[1] : undefined,
+    }),
+    [q, category, appliedPrice],
+  );
+
+  const { data: listings = [], isLoading, isError } = useListings(filters);
+
+  const updateParam = (key: string, value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (!value || value === "all") next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      
-      {/* Sticky Filter Bar */}
-      <div className="sticky top-[72px] z-30 bg-background border-b px-4 py-3 hidden md:block">
-        <div className="container mx-auto flex items-center justify-between">
+
+      {/* Barra de filtros */}
+      <div className="sticky top-[72px] z-30 bg-background border-b px-4 py-3">
+        <div className="container mx-auto flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <form
+            className="relative w-full lg:max-w-sm"
+            onSubmit={(event) => {
+              event.preventDefault();
+              updateParam("q", term.trim());
+            }}
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={term}
+              onChange={(event) => setTerm(event.target.value)}
+              placeholder="O que você precisa alugar?"
+              className="pl-9 rounded-full"
+              aria-label="Buscar itens"
+            />
+          </form>
+
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <Button
+              variant={category === "all" ? "default" : "outline"}
+              className="rounded-full shrink-0"
+              onClick={() => updateParam("categoria", "all")}
+            >
+              Todos
+            </Button>
+            {categories.map((cat) => (
+              <Button
+                key={cat.slug}
+                variant={category === cat.slug ? "default" : "outline"}
+                className="rounded-full shrink-0"
+                onClick={() => updateParam("categoria", cat.slug)}
+              >
+                <span className="mr-1">{cat.icon}</span>
+                {cat.name}
+              </Button>
+            ))}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
+                <Button variant="outline" className="rounded-full shrink-0">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
                   Preço <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 p-4" align="start">
-                <DropdownMenuLabel>Faixa de preço</DropdownMenuLabel>
+              <DropdownMenuContent className="w-80 p-4" align="end">
+                <DropdownMenuLabel>Faixa de preço por dia</DropdownMenuLabel>
                 <div className="py-4">
-                  <Slider 
-                    defaultValue={[0, 500]} 
-                    max={1000} 
-                    step={10} 
+                  <Slider
+                    max={MAX_PRICE}
+                    step={10}
                     value={priceRange}
-                    onValueChange={setPriceRange}
+                    onValueChange={(value) => setPriceRange(value as [number, number])}
                   />
                   <div className="flex justify-between mt-4 text-sm">
                     <div className="border rounded-md px-3 py-1">
@@ -136,37 +128,33 @@ const Buscar = () => {
                     </div>
                     <div className="border rounded-md px-3 py-1">
                       <span className="text-muted-foreground text-xs block">Máximo</span>
-                      <span>R$ {priceRange[1]}</span>
+                      <span>R$ {priceRange[1]}{priceRange[1] === MAX_PRICE ? "+" : ""}</span>
                     </div>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
                 <div className="flex justify-between pt-2">
-                  <Button variant="ghost" size="sm" onClick={() => setPriceRange([0, 1000])}>Limpar</Button>
-                  <Button size="sm">Aplicar</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPriceRange([0, MAX_PRICE]);
+                      setAppliedPrice([0, MAX_PRICE]);
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                  <Button size="sm" onClick={() => setAppliedPrice(priceRange)}>
+                    Aplicar
+                  </Button>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
-              Tipo de item
-            </Button>
-            
-            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black">
-              Marca
-            </Button>
-            
-            <Button variant="outline" className="rounded-full border-gray-300 hover:border-black flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4" />
-              Filtros
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2 border-l pl-4 ml-4">
-            <div className="flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-2 border-l pl-4 ml-2 shrink-0">
               <Switch id="map-mode" checked={showMap} onCheckedChange={setShowMap} />
               <Label htmlFor="map-mode" className="cursor-pointer flex items-center gap-2">
-                Mostrar mapa <MapIcon className="h-4 w-4" />
+                Mapa <MapIcon className="h-4 w-4" />
               </Label>
             </div>
           </div>
@@ -174,15 +162,17 @@ const Buscar = () => {
       </div>
 
       <main className="flex-1 flex">
-        {/* Product Grid */}
-        <div className={`flex-1 p-6 ${showMap ? 'lg:w-3/5' : 'container mx-auto'}`}>
+        <div className={`flex-1 p-6 ${showMap ? "lg:w-3/5" : "container mx-auto"}`}>
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-xl font-semibold">
-              {items.length} resultados encontrados
+              {isLoading
+                ? "Buscando itens..."
+                : `${listings.length} ${listings.length === 1 ? "resultado" : "resultados"}`}
+              {q && <span className="text-muted-foreground font-normal"> para “{q}”</span>}
             </h1>
-            {/* Mobile Map Toggle */}
-            <Button 
-              className="md:hidden fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 rounded-full shadow-lg px-6"
+
+            <Button
+              className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 rounded-full shadow-lg px-6"
               onClick={() => setShowMap(!showMap)}
             >
               {showMap ? (
@@ -193,48 +183,41 @@ const Buscar = () => {
             </Button>
           </div>
 
-          <div className={`grid gap-6 ${
-            showMap 
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3' 
-              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-          }`}>
-            {items.map((item) => (
-              <Link key={item.id} to={`/produto/${item.id}`} className="group cursor-pointer">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted mb-3">
-                  <img 
-                    src={item.image} 
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
-                  />
-                  <button className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/10 transition-colors">
-                    <Heart className="h-6 w-6 text-white drop-shadow-md stroke-[2px]" />
-                  </button>
-                  {item.guestFavorite && (
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur text-xs font-semibold px-2 py-1 rounded shadow-sm">
-                      Destaque
-                    </div>
-                  )}
+          <div
+            className={`grid gap-6 ${
+              showMap
+                ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+            }`}
+          >
+            {isLoading &&
+              Array.from({ length: 10 }).map((_, index) => (
+                <div key={index} className="space-y-3">
+                  <Skeleton className="aspect-[4/3] w-full rounded-xl" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-base truncate pr-2">{item.location}</h3>
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="h-3 w-3 fill-foreground" />
-                      <span>{item.rating}</span>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm truncate">{item.name}</p>
-                  <p className="text-muted-foreground text-sm">
-                    <span className="font-semibold text-foreground">R$ {item.price}</span> / dia
-                  </p>
-                </div>
-              </Link>
-            ))}
+              ))}
+
+            {!isLoading &&
+              listings.map((listing) => <ListingCard key={listing.id} listing={listing} />)}
           </div>
+
+          {isError && (
+            <p className="text-center text-muted-foreground py-16">
+              Não foi possível carregar os itens. Tente novamente.
+            </p>
+          )}
+
+          {!isLoading && !isError && listings.length === 0 && (
+            <div className="text-center py-24 text-muted-foreground">
+              <PackageOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="font-medium text-foreground">Nenhum item encontrado</p>
+              <p className="text-sm">Tente outra busca ou amplie a faixa de preço.</p>
+            </div>
+          )}
         </div>
 
-        {/* Map Side Panel */}
         {showMap && (
           <div className="hidden lg:block w-2/5 sticky top-[137px] h-[calc(100vh-137px)] bg-muted border-l">
             <div className="h-full w-full flex items-center justify-center bg-slate-100 text-muted-foreground">

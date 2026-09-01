@@ -22,9 +22,14 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCategories, useCreateListing } from "@/hooks/useListings";
 
 const Anunciar = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: categories = [] } = useCategories();
+  const createListing = useCreateListing();
   const [step, setStep] = useState(1);
   const totalSteps = 5;
   const [uploading, setUploading] = useState(false);
@@ -34,18 +39,10 @@ const Anunciar = () => {
     title: "",
     description: "",
     price: "",
+    deposit: "",
     location: "",
     images: [] as string[]
   });
-
-  const categories = [
-    { id: "ferramentas", name: "Ferramentas", icon: "🔧" },
-    { id: "eletronicos", name: "Eletrônicos", icon: "📷" },
-    { id: "esportes", name: "Esportes", icon: "⚽" },
-    { id: "festas", name: "Festas", icon: "🎉" },
-    { id: "camping", name: "Camping", icon: "⛺" },
-    { id: "outros", name: "Outros", icon: "📦" },
-  ];
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -84,6 +81,38 @@ const Anunciar = () => {
     }));
   };
 
+  const submitListing = async () => {
+    if (!user) {
+      toast.error("Entre na sua conta para anunciar");
+      navigate("/entrar", { state: { from: "/anunciar" } });
+      return;
+    }
+
+    const price = Number(formData.price.replace(",", "."));
+    if (!Number.isFinite(price) || price <= 0) {
+      toast.error("Defina um preço válido por dia");
+      return;
+    }
+
+    try {
+      await createListing.mutateAsync({
+        owner_id: user.id,
+        category_slug: formData.category,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        price_per_day: price,
+        deposit: Number(formData.deposit.replace(",", ".")) || 0,
+        location: formData.location.trim(),
+        images: formData.images,
+      });
+      toast.success("Anúncio publicado!");
+      navigate("/painel-locador");
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : "Não foi possível publicar o anúncio");
+    }
+  };
+
   const nextStep = () => {
     if (step === 1 && !formData.category) {
       toast.error("Selecione uma categoria");
@@ -102,13 +131,7 @@ const Anunciar = () => {
       return;
     }
     if (step === 5) {
-      // Final submit
-      if (!formData.price) {
-        toast.error("Defina um preço");
-        return;
-      }
-      toast.success("Anúncio criado com sucesso!");
-      navigate("/painel-locador");
+      void submitListing();
       return;
     }
 
@@ -128,10 +151,10 @@ const Anunciar = () => {
             <p className="text-muted-foreground text-lg">Escolha a categoria que melhor descreve seu item.</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
               {categories.map((cat) => (
-                <Card 
-                  key={cat.id}
-                  className={`cursor-pointer transition-all hover:border-primary ${formData.category === cat.id ? 'border-2 border-primary bg-primary/5' : ''}`}
-                  onClick={() => setFormData(prev => ({ ...prev, category: cat.id }))}
+                <Card
+                  key={cat.slug}
+                  className={`cursor-pointer transition-all hover:border-primary ${formData.category === cat.slug ? 'border-2 border-primary bg-primary/5' : ''}`}
+                  onClick={() => setFormData(prev => ({ ...prev, category: cat.slug }))}
                 >
                   <CardContent className="flex flex-col items-center justify-center p-6 h-32">
                     <span className="text-4xl mb-2">{cat.icon}</span>
@@ -270,6 +293,21 @@ const Anunciar = () => {
                 />
               </div>
               <p className="text-center text-muted-foreground mt-4">por dia</p>
+
+              <div className="space-y-2 mt-8">
+                <Label htmlFor="deposit" className="text-base">Caução (opcional)</Label>
+                <Input
+                  id="deposit"
+                  type="number"
+                  placeholder="0"
+                  value={formData.deposit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deposit: e.target.value }))}
+                  className="text-lg py-6"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Valor bloqueado no cartão do locatário e devolvido quando o item voltar sem danos.
+                </p>
+              </div>
             </div>
 
             <div className="mt-12 bg-muted/30 p-6 rounded-xl border">
@@ -368,11 +406,13 @@ const Anunciar = () => {
            ))}
          </div>
 
-         <Button 
-           onClick={nextStep} 
+         <Button
+           onClick={nextStep}
            size="lg"
+           disabled={createListing.isPending}
            className="px-8 font-semibold text-lg"
          >
+           {createListing.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
            {step === totalSteps ? "Publicar Anúncio" : "Próximo"}
          </Button>
       </footer>
