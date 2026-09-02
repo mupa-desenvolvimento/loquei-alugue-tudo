@@ -67,7 +67,21 @@ export function useListings(filters: ListingFilters = {}) {
         query = query.ilike("search_text", `%${normalize(filters.q.trim())}%`);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false }).limit(60);
+      /*
+       * Quem pagou destaque vem primeiro. `nullsFirst: false` manda os sem
+       * destaque para o fim, e o desempate é pelo mais recente.
+       *
+       * Dentro de uma categoria, `category_top_until` tem prioridade: é o
+       * produto mais barato e só vale ali.
+       */
+      if (filters.category && filters.category !== "all") {
+        query = query.order("category_top_until", { ascending: false, nullsFirst: false });
+      }
+
+      const { data, error } = await query
+        .order("featured_until", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(60);
       if (error) throw error;
       return (data ?? []) as unknown as ListingWithOwner[];
     },

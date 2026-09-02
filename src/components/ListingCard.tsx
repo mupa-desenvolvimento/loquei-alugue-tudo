@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites";
@@ -16,6 +16,10 @@ export default function ListingCard({ listing }: { listing: ListingWithOwner }) 
   const toggleFavorite = useToggleFavorite(user?.id);
 
   const favorited = favoriteIds.includes(listing.id);
+  // O selo some sozinho quando a data passa, mesmo antes de a rotina de
+  // expiracao rodar no banco.
+  const emDestaque =
+    Boolean(listing.featured_until) && new Date(listing.featured_until!) > new Date();
 
   const handleFavorite = (event: React.MouseEvent) => {
     event.preventDefault(); // o card inteiro é um link
@@ -47,10 +51,17 @@ export default function ListingCard({ listing }: { listing: ListingWithOwner }) 
             }`}
           />
         </button>
-        {listing.rating_count >= 10 && listing.rating_avg >= 4.8 && (
-          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur text-xs font-semibold px-2 py-1 rounded shadow-sm">
+        {emDestaque ? (
+          <div className="absolute top-3 left-3 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-sm">
+            <Sparkles className="h-3 w-3" />
             Destaque
           </div>
+        ) : (
+          listing.rating_count >= 10 && listing.rating_avg >= 4.8 && (
+            <div className="absolute left-3 top-3 rounded bg-white/95 px-2 py-1 text-xs font-semibold shadow-sm backdrop-blur">
+              Bem avaliado
+            </div>
+          )
         )}
       </div>
 

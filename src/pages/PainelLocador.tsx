@@ -24,12 +24,15 @@ import {
   User,
   Check,
   X,
+  Sparkles,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMyListings, useUpdateListingStatus } from "@/hooks/useListings";
 import { useReceivedBookings, useUpdateBookingStatus } from "@/hooks/useBookings";
 import { formatBRL, OWNER_COMMISSION_RATE } from "@/lib/pricing";
+import PromoverDialog from "@/components/PromoverDialog";
+import type { ListingWithOwner } from "@/types/database";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
@@ -45,6 +48,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 const PainelLocador = () => {
   const { user, updateUser } = useAuth();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [promovendo, setPromovendo] = useState<ListingWithOwner | null>(null);
 
   const { data: listings = [], isLoading: loadingListings } = useMyListings(user?.id);
   const { data: bookings = [], isLoading: loadingBookings } = useReceivedBookings(user?.id);
@@ -200,6 +204,17 @@ const PainelLocador = () => {
                         >
                           {item.status === "active" ? "Pausar" : "Reativar"}
                         </Button>
+                        {item.featured_until && new Date(item.featured_until) > new Date() ? (
+                          <Badge className="gap-1 py-1.5">
+                            <Sparkles className="h-3 w-3" />
+                            Em destaque
+                          </Badge>
+                        ) : (
+                          <Button size="sm" onClick={() => setPromovendo(item)}>
+                            <Sparkles className="mr-1 h-3.5 w-3.5" />
+                            Promover
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -405,6 +420,8 @@ const PainelLocador = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <PromoverDialog listing={promovendo} onClose={() => setPromovendo(null)} />
 
       <Footer />
     </div>

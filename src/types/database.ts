@@ -8,6 +8,16 @@
 export type UserType = "pf" | "pj";
 export type UserProfile = "locador" | "locatario";
 export type UserRole = "user" | "admin";
+export type UserPlan = "free" | "pro";
+export type BannerKind = "editorial" | "sponsored";
+export type PlanKind = "featured" | "category_top" | "banner" | "pro";
+export type PromotionStatus =
+  | "pending"
+  | "paid"
+  | "active"
+  | "expired"
+  | "cancelled"
+  | "refunded";
 export type ListingStatus = "draft" | "active" | "paused" | "removed";
 export type BookingStatus =
   | "pending"
@@ -31,6 +41,8 @@ export type Profile = {
   role: UserRole;
   /** Preenchido quando um admin bloqueia a conta. */
   blocked_at: string | null;
+  plan: UserPlan;
+  pro_until: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +73,10 @@ export type Listing = {
   updated_at: string;
   /** Coluna gerada: título + descrição + local, sem acento e em minúsculas. */
   search_text?: string;
+  /** Enquanto no futuro, o anúncio sobe na busca inteira. */
+  featured_until: string | null;
+  /** Enquanto no futuro, o anúncio sobe dentro da própria categoria. */
+  category_top_until: string | null;
 }
 
 /** Anúncio já com o dono e a categoria resolvidos, como as telas consomem. */
@@ -110,6 +126,51 @@ export type Conversation = {
   created_at: string;
 }
 
+export type Banner = {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  image_url: string;
+  link_url: string | null;
+  alt: string;
+  position: number;
+  active: boolean;
+  kind: BannerKind;
+  sponsor_name: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PromotionPlan = {
+  slug: string;
+  name: string;
+  description: string;
+  kind: PlanKind;
+  price: number;
+  duration_days: number;
+  active: boolean;
+  sort: number;
+}
+
+export type Promotion = {
+  id: string;
+  plan_slug: string;
+  user_id: string;
+  listing_id: string | null;
+  banner_id: string | null;
+  amount: number;
+  status: PromotionStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  provider: string | null;
+  provider_ref: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type Notification = {
   id: string;
   user_id: string;
@@ -149,9 +210,17 @@ export interface Database {
       conversations: Row<Conversation>;
       messages: Row<Message>;
       notifications: Row<Notification>;
+      banners: Row<Banner>;
+      promotion_plans: Row<PromotionPlan>;
+      promotions: Row<Promotion>;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      admin_stats: { Args: Record<string, never>; Returns: unknown };
+      admin_revenue: { Args: Record<string, never>; Returns: unknown };
+      activate_promotion: { Args: { promotion_id: string }; Returns: undefined };
+      expire_promotions: { Args: Record<string, never>; Returns: number };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

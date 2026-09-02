@@ -14,6 +14,8 @@ const owner = (id: string, name: string) => ({
 const base = {
   deposit: 0,
   status: "active" as const,
+  featured_until: null,
+  category_top_until: null,
   created_at: "2025-01-10T00:00:00Z",
   updated_at: "2025-01-10T00:00:00Z",
 };

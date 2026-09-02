@@ -31,6 +31,8 @@ import {
   useSaveCategory, useDeleteCategory, useSendNotification,
 } from "@/hooks/useAdmin";
 import { useCategories } from "@/hooks/useListings";
+import BannersTab from "@/components/admin/BannersTab";
+import MonetizacaoTab from "@/components/admin/MonetizacaoTab";
 import { formatBRL } from "@/lib/pricing";
 import type { BookingStatus, ListingStatus, Profile } from "@/types/database";
 
@@ -144,12 +146,14 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="visao" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
             <TabsTrigger value="visao">Visão geral</TabsTrigger>
             <TabsTrigger value="anuncios">Anúncios</TabsTrigger>
             <TabsTrigger value="usuarios">Usuários</TabsTrigger>
             <TabsTrigger value="reservas">Reservas</TabsTrigger>
             <TabsTrigger value="categorias">Categorias</TabsTrigger>
+            <TabsTrigger value="banners">Banners</TabsTrigger>
+            <TabsTrigger value="monetizacao">Monetização</TabsTrigger>
           </TabsList>
 
           {/* ---------------------------------------------------- visão geral */}
@@ -436,6 +440,15 @@ const Admin = () => {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+          {/* --------------------------------------------------------- banners */}
+          <TabsContent value="banners">
+            <BannersTab />
+          </TabsContent>
+
+          {/* ----------------------------------------------------- monetização */}
+          <TabsContent value="monetizacao">
+            <MonetizacaoTab />
           </TabsContent>
         </Tabs>
       </main>
