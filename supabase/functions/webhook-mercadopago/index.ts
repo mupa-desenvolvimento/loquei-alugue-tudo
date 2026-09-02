@@ -12,6 +12,12 @@
  * esse rastro, uma notificação perdida só aparece como uma contratação que
  * ficou 'pending' para sempre, sem dizer o motivo.
  *
+ * Respondemos 200 mesmo quando recusamos. O Mercado Pago valida a URL ao
+ * cadastrar o webhook e trata resposta de erro como endpoint quebrado --
+ * chegando a não ativar a configuração. Isso não afrouxa nada: recusa
+ * continua sendo recusa, nada é liberado, e o motivo fica no log. O status
+ * HTTP é só o que o provedor enxerga.
+ *
  * Implante com `--no-verify-jwt`: quem chama é o Mercado Pago, que não tem
  * sessão de usuário.
  */
@@ -111,7 +117,7 @@ Deno.serve(async (req) => {
       await registrar({ event_type: tipo, data_id: dataId, signature_ok: false,
                         outcome: "recusado", detail: motivo, headers: cabecalhos });
       console.error("assinatura invalida:", motivo);
-      return ok({ error: "assinatura inválida" }, 401);
+      return ok({ recusado: "assinatura inválida" });
     }
 
     // Só pagamento interessa; o Mercado Pago manda outros tipos de evento.
@@ -129,7 +135,7 @@ Deno.serve(async (req) => {
       await registrar({ event_type: tipo, data_id: dataId, signature_ok: true,
                         outcome: "erro", detail: `consulta ao pagamento falhou: ${resposta.status}`,
                         headers: cabecalhos });
-      return ok({ error: "pagamento não encontrado" }, 404);
+      return ok({ recusado: "pagamento não encontrado" });
     }
 
     const pagamento = await resposta.json();
@@ -180,7 +186,7 @@ Deno.serve(async (req) => {
       await registrar({ event_type: tipo, data_id: dataId, promotion_id: promotionId,
                         signature_ok: true, outcome: "recusado",
                         detail: `pago ${pago} < devido ${promocao.amount}`, headers: cabecalhos });
-      return ok({ error: "valor insuficiente" }, 400);
+      return ok({ recusado: "valor insuficiente" });
     }
 
     await supabase
