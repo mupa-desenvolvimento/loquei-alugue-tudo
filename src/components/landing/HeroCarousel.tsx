@@ -62,7 +62,9 @@ export default function HeroCarousel({ banners }: { banners: Banner[] }) {
             alt={indice === atual ? banner.alt : ""}
             // A primeira entra com a página; as demais podem esperar.
             loading={indice === 0 ? "eager" : "lazy"}
-            fetchPriority={indice === 0 ? "high" : "low"}
+            // Em minúsculas de propósito: o React 18 não conhece a forma
+            // camelCase e descarta o atributo, avisando no console.
+            {...{ fetchpriority: indice === 0 ? "high" : "low" }}
             className={`h-full w-full object-cover ${
               indice === atual && !semMovimento ? "animate-ken-burns" : ""
             }`}
