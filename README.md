@@ -97,6 +97,15 @@ evento de **pagamentos** e copie a chave secreta gerada para o
 Comece com as credenciais de **teste** — o checkout devolve `sandbox_init_point`
 e nenhum dinheiro real circula.
 
+O projeto também declara o [MCP Server do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/mcp-server/overview)
+em `.mcp.json`. Ele serve para consultar a documentação, criar usuários de
+teste, configurar webhooks e medir a qualidade da integração direto do editor.
+Exige um cliente com MCP e autenticação por OAuth:
+
+```bash
+claude mcp add --transport http mercadopago https://mcp.mercadopago.com/mcp
+```
+
 ### O que é vendido
 
 | Produto | Efeito |
