@@ -26,7 +26,8 @@ interface, não para uso real.
    - `0003_admin_and_categories.sql` — papel de admin, 12 categorias, notificações;
    - `0004_fix_admin_bootstrap.sql` — correção que permite criar o primeiro admin;
    - `0005_banners_and_monetization.sql` — banners e produtos pagos;
-   - `0006_fix_promotion_privileges.sql` — impede obter promoção sem pagar.
+   - `0006_fix_promotion_privileges.sql` — impede obter promoção sem pagar;
+   - `0007_agendar_expiracao.sql` — encerra promoções vencidas de hora em hora.
 3. Copie `.env.example` para `.env` e preencha com os valores de **Project Settings → API**:
 
    ```
@@ -160,5 +161,3 @@ Centralizadas em [`src/lib/pricing.ts`](src/lib/pricing.ts):
 - **Verificação de identidade** e **conta bancária do locador**.
 - **Login social.** O código está pronto; falta criar as credenciais no Google e
   no Facebook e ativá-las no Supabase (ver acima).
-- **Expiração automática.** `expire_promotions()` existe mas roda quando o admin
-  clica. O certo é agendar com `pg_cron` (`select cron.schedule(...)`).
