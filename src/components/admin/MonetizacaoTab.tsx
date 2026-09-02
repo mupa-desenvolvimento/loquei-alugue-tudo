@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { DollarSign, Star, Crown, Clock, RefreshCw, Check } from "lucide-react";
+import {
+  DollarSign, Star, Crown, Clock, RefreshCw, Check, RotateCw, ShieldCheck, ShieldAlert,
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import {
   useAdminPromotions, useAdminRevenue, useActivatePromotion, useExpirePromotions,
-  usePromotionPlans,
+  usePromotionPlans, useConciliarPagamentos, usePaymentEvents,
 } from "@/hooks/usePromotions";
 import { formatBRL } from "@/lib/pricing";
 import type { PromotionStatus } from "@/types/database";
@@ -27,6 +29,8 @@ const STATUS: Record<PromotionStatus, { rotulo: string; variante: "default" | "s
 
 export default function MonetizacaoTab() {
   const { data: receita, isLoading: carregandoReceita } = useAdminRevenue();
+  const conciliar = useConciliarPagamentos();
+  const { data: eventos = [] } = usePaymentEvents();
   const { data: promocoes = [], isLoading } = useAdminPromotions();
   const { data: planos = [] } = usePromotionPlans();
   const ativar = useActivatePromotion();
@@ -86,6 +90,37 @@ export default function MonetizacaoTab() {
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-lg font-semibold">Contratações</h3>
+          <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={() =>
+              conciliar.mutate(undefined, {
+                onSuccess: (resultado) => {
+                  const liberadas = resultado.relatorio.filter((r) =>
+                    r.resultado === "liberado").length;
+                  if (liberadas > 0) {
+                    toast.success(
+                      `${liberadas} ${liberadas === 1 ? "contratação liberada" : "contratações liberadas"}`,
+                    );
+                  } else if (resultado.pendentes === 0) {
+                    toast.info("Nenhuma contratação pendente");
+                  } else {
+                    toast.info(
+                      `${resultado.pendentes} pendente(s), nenhum pagamento aprovado no provedor`,
+                    );
+                  }
+                },
+                onError: (erro) =>
+                  toast.error(
+                    erro instanceof Error ? erro.message : "Não foi possível conciliar",
+                  ),
+              })
+            }
+            disabled={conciliar.isPending}
+          >
+            <RotateCw className={`mr-2 h-3.5 w-3.5 ${conciliar.isPending ? "animate-spin" : ""}`} />
+            Conciliar pagamentos
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -103,6 +138,7 @@ export default function MonetizacaoTab() {
             <RefreshCw className={`mr-2 h-3.5 w-3.5 ${expirar.isPending ? "animate-spin" : ""}`} />
             Encerrar vencidas
           </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -171,8 +207,68 @@ export default function MonetizacaoTab() {
 
         <p className="mt-3 text-sm text-muted-foreground">
           O pagamento pelo Mercado Pago libera a promoção sozinho, pelo webhook.
-          O botão acima serve para o caso de pagamento fora da plataforma (um Pix
-          direto, por exemplo).
+          <strong className="text-foreground"> Conciliar pagamentos</strong> pergunta
+          ao provedor o que houve com as pendentes e libera as que já foram pagas —
+          use quando uma notificação se perder. Já o botão de confirmar, na linha,
+          serve para pagamento fora da plataforma (um Pix direto, por exemplo).
+        </p>
+      </div>
+
+      {/* Trilha de auditoria */}
+      <div>
+        <h3 className="mb-3 text-lg font-semibold">Notificações do provedor</h3>
+        {eventos.length === 0 ? (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-muted-foreground">
+              Nenhuma notificação recebida ainda. Se um pagamento foi feito e nada
+              aparece aqui, o provedor não chegou a chamar a plataforma.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Quando</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Assinatura</TableHead>
+                  <TableHead>Resultado</TableHead>
+                  <TableHead>Detalhe</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventos.map((evento) => (
+                  <TableRow key={evento.id}>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                      {format(parseISO(evento.received_at), "dd/MM HH:mm:ss", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="text-sm">{evento.event_type ?? "—"}</TableCell>
+                    <TableCell>
+                      {evento.signature_ok === null ? (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      ) : evento.signature_ok ? (
+                        <ShieldCheck className="h-4 w-4 text-emerald-600" aria-label="válida" />
+                      ) : (
+                        <ShieldAlert className="h-4 w-4 text-destructive" aria-label="inválida" />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={evento.outcome === "liberado" ? "default" : "secondary"}>
+                        {evento.outcome}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[22rem] truncate text-sm text-muted-foreground">
+                      {evento.detail}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        <p className="mt-3 text-sm text-muted-foreground">
+          Registro de tudo que o Mercado Pago envia, inclusive o que foi recusado.
+          O histórico não pode ser apagado pelo painel.
         </p>
       </div>
     </div>

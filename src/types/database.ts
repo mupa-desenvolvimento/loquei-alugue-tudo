@@ -171,6 +171,18 @@ export type Promotion = {
   updated_at: string;
 }
 
+export type PaymentEvent = {
+  id: string;
+  provider: string;
+  event_type: string | null;
+  data_id: string | null;
+  promotion_id: string | null;
+  signature_ok: boolean | null;
+  outcome: string;
+  detail: string | null;
+  received_at: string;
+}
+
 export type Notification = {
   id: string;
   user_id: string;
@@ -213,6 +225,7 @@ export interface Database {
       banners: Row<Banner>;
       promotion_plans: Row<PromotionPlan>;
       promotions: Row<Promotion>;
+      payment_events: Row<PaymentEvent>;
     };
     Views: Record<string, never>;
     Functions: {

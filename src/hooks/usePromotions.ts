@@ -179,3 +179,67 @@ export function useExpirePromotions() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin"] }),
   });
 }
+
+export interface ItemConciliado {
+  promocao: string;
+  valor_devido: number;
+  pagamentos_encontrados: number;
+  status_no_provedor: string[];
+  resultado: string;
+}
+
+export interface Conciliacao {
+  conta_do_token: { id: number; apelido: string; site: string; email: string } | string;
+  pendentes: number;
+  relatorio: ItemConciliado[];
+}
+
+/**
+ * Pergunta ao Mercado Pago o que houve com as contratações pendentes e
+ * libera as que já foram pagas.
+ *
+ * Existe porque notificação se perde — provedor fora do ar, rede, webhook
+ * mal configurado — e sem uma segunda via o cliente paga e fica esperando.
+ */
+export function useConciliarPagamentos() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await requireSupabase()
+        .functions.invoke("conciliar-pagamento", { body: {} });
+      if (error) throw error;
+      return data as Conciliacao;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+      queryClient.invalidateQueries({ queryKey: ["listings"] });
+    },
+  });
+}
+
+export interface PaymentEvent {
+  id: string;
+  event_type: string | null;
+  data_id: string | null;
+  promotion_id: string | null;
+  signature_ok: boolean | null;
+  outcome: string;
+  detail: string | null;
+  received_at: string;
+}
+
+/** Últimas notificações recebidas do provedor — a trilha de auditoria. */
+export function usePaymentEvents() {
+  return useQuery<PaymentEvent[]>({
+    queryKey: ["admin", "payment-events"],
+    queryFn: async () => {
+      const { data, error } = await requireSupabase()
+        .from("payment_events")
+        .select("id, event_type, data_id, promotion_id, signature_ok, outcome, detail, received_at")
+        .order("received_at", { ascending: false })
+        .limit(30);
+      if (error) throw error;
+      return (data ?? []) as PaymentEvent[];
+    },
+  });
+}
