@@ -58,6 +58,15 @@ Deno.serve(async (req) => {
     const siteUrl = Deno.env.get("SITE_URL") ?? "http://localhost:8080";
     const plano = (promocao.plan as { name?: string } | null)?.name ?? "Promoção Loquei";
 
+    /*
+     * `auto_return` devolve o comprador para a loja assim que o pagamento e
+     * aprovado, mas o Mercado Pago so aceita a opcao com back_urls publicas:
+     * com SITE_URL em localhost ele recusa a preferencia inteira
+     * ("invalid_auto_return"). Em desenvolvimento, seguimos sem o retorno
+     * automatico -- o comprador volta pelo botao do proprio checkout.
+     */
+    const ambienteLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(siteUrl);
+
     const resposta = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
@@ -81,7 +90,7 @@ Deno.serve(async (req) => {
           pending: `${siteUrl}/painel-locador?pagamento=pendente`,
           failure: `${siteUrl}/painel-locador?pagamento=falhou`,
         },
-        auto_return: "approved",
+        ...(ambienteLocal ? {} : { auto_return: "approved" }),
         // Amarra a preferência à contratação: o webhook usa isto para saber
         // qual promoção liberar.
         external_reference: promocao.id,
