@@ -14,12 +14,14 @@ import {
   Search, ShieldCheck, Wallet, Clock, ArrowRight, MapPin, TrendingUp,
 } from "lucide-react";
 import { useCategories, useListings } from "@/hooks/useListings";
+import { useBanners } from "@/hooks/useBanners";
 import { formatBRL, OWNER_COMMISSION_RATE } from "@/lib/pricing";
 
 const foto = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1920&q=80`;
 
-const BANNERS: Banner[] = [
+/** Usados só enquanto o admin não cadastrar nenhum banner. */
+const BANNERS_PADRAO: Banner[] = [
   { image: foto("photo-1426927308491-6380b6a9936f"), alt: "Bancada de oficina com ferramentas organizadas" },
   { image: foto("photo-1526170375885-4d8ecf77b99f"), alt: "Lentes e equipamento fotográfico sobre a mesa" },
   { image: foto("photo-1530103862676-de8c9debad1d"), alt: "Balões coloridos preparados para uma festa" },
@@ -55,6 +57,13 @@ const Landing = () => {
 
   const { data: categories = [] } = useCategories();
   const { data: destaques = [], isLoading } = useListings({});
+  const { data: bannersDoBanco = [] } = useBanners();
+
+  // O que o admin cadastrar substitui o padrão; sem nada cadastrado, a home
+  // continua com imagem em vez de um vazio.
+  const banners = bannersDoBanco.length
+    ? bannersDoBanco.map((b) => ({ image: b.image_url, alt: b.alt, link: b.link_url ?? undefined }))
+    : BANNERS_PADRAO;
 
   const buscar = (evento: React.FormEvent) => {
     evento.preventDefault();
@@ -89,7 +98,7 @@ const Landing = () => {
 
       {/* ------------------------------------------------------------ hero */}
       <section className="relative min-h-[38rem] lg:min-h-[44rem]">
-        <HeroCarousel banners={BANNERS} />
+        <HeroCarousel banners={banners} />
 
         <div className="container relative z-10 mx-auto px-4 pt-32 pb-20 lg:pt-40">
           <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">

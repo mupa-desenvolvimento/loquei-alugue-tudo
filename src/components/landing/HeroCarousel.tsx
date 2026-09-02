@@ -4,6 +4,8 @@ export interface Banner {
   image: string;
   /** Texto alternativo — descreve a cena, não o produto. */
   alt: string;
+  /** Destino ao clicar, quando o banner é patrocinado ou aponta para uma busca. */
+  link?: string;
 }
 
 const INTERVALO = 6000;
