@@ -20,9 +20,13 @@ interface, não para uso real.
 ## Conectando o backend
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. No **SQL Editor**, rode na ordem os arquivos de `supabase/migrations/`:
-   - `0001_init.sql` — tabelas, triggers, políticas de RLS e o bucket de imagens;
-   - `0002_search_unaccent.sql` — busca que ignora acentos.
+2. No **SQL Editor**, rode **em ordem** todos os arquivos de `supabase/migrations/`:
+   - `0001_init.sql` — tabelas, triggers, RLS e o bucket de imagens;
+   - `0002_search_unaccent.sql` — busca que ignora acentos;
+   - `0003_admin_and_categories.sql` — papel de admin, 12 categorias, notificações;
+   - `0004_fix_admin_bootstrap.sql` — correção que permite criar o primeiro admin;
+   - `0005_banners_and_monetization.sql` — banners e produtos pagos;
+   - `0006_fix_promotion_privileges.sql` — impede obter promoção sem pagar.
 3. Copie `.env.example` para `.env` e preencha com os valores de **Project Settings → API**:
 
    ```
@@ -64,6 +68,52 @@ O `Client Secret` fica só no Supabase — nunca no `.env` do front.
 Quem entra por login social cai no perfil `locatario` por padrão, já que o
 provedor não informa se a pessoa quer alugar ou anunciar.
 
+### Pagamentos (Mercado Pago)
+
+A cobrança das promoções roda em duas Edge Functions, e não no front: o
+`ACCESS_TOKEN` do Mercado Pago move dinheiro e nunca pode ir para o bundle.
+
+```bash
+npx supabase login
+npx supabase link --project-ref <seu-project-ref>
+
+npx supabase secrets set MERCADOPAGO_ACCESS_TOKEN=APP_USR-...
+npx supabase secrets set MERCADOPAGO_WEBHOOK_SECRET=...
+npx supabase secrets set SITE_URL=https://seu-dominio.com.br
+
+npx supabase functions deploy criar-pagamento
+npx supabase functions deploy webhook-mercadopago --no-verify-jwt
+```
+
+O `--no-verify-jwt` no webhook é obrigatório: quem chama é o Mercado Pago, que
+não tem sessão de usuário. A autenticação dele é a assinatura `x-signature`,
+conferida dentro da função.
+
+No painel do Mercado Pago, em **Suas integrações → Webhooks**, aponte para
+`https://<projeto>.supabase.co/functions/v1/webhook-mercadopago`, marque o
+evento de **pagamentos** e copie a chave secreta gerada para o
+`MERCADOPAGO_WEBHOOK_SECRET`.
+
+Comece com as credenciais de **teste** — o checkout devolve `sandbox_init_point`
+e nenhum dinheiro real circula.
+
+### O que é vendido
+
+| Produto | Efeito |
+| --- | --- |
+| Destaque (7 ou 15 dias) | O anúncio sobe em toda a busca e ganha selo |
+| Topo da categoria | Primeiro lugar só dentro da categoria do item |
+| Banner na home | Espaço no carrossel, com período e link próprios |
+| Plano Pro | Comissão de 5% em vez de 10%, por 30 dias |
+
+Preços e textos ficam na tabela `promotion_plans` e são editáveis pelo painel,
+sem mexer no código.
+
+Nada disso é liberado pelo cliente: a promoção nasce como `pending`, e só o
+webhook (ou um admin, para pagamento fora da plataforma) chama
+`activate_promotion`. Triggers impedem que o dono do anúncio escreva
+`featured_until` ou vire Pro por conta própria.
+
 ## Modelo de dados
 
 | Tabela | Papel |
@@ -75,6 +125,9 @@ provedor não informa se a pessoa quer alugar ou anunciar.
 | `reviews` | Avaliação por reserva; recalcula a nota do anúncio via trigger. |
 | `favorites` | Itens salvos por usuário. |
 | `conversations` / `messages` | Chat entre locador e locatário. |
+| `banners` | Carrossel da home, editorial ou patrocinado, com período de exibição. |
+| `promotion_plans` | Produtos à venda: destaque, topo de categoria, banner, Pro. |
+| `promotions` | Contratações e seu estado de pagamento. |
 
 RLS está ativo em todas as tabelas: anúncios ativos são públicos, reservas só aparecem
 para as duas partes envolvidas, favoritos são privados e só quem alugou (e devolveu)
@@ -91,10 +144,12 @@ Centralizadas em [`src/lib/pricing.ts`](src/lib/pricing.ts):
 
 ## O que ainda não existe
 
-- **Pagamento.** O checkout cria a reserva, mas nenhum valor é cobrado — falta integrar
-  um gateway (os dados de cartão devem ser coletados pelo provedor, nunca por uma tela nossa).
+- **Cobrança da locação.** O gateway já cobra as promoções, mas o checkout de
+  aluguel ainda só cria a reserva, sem cobrar.
 - **Mensagens.** As tabelas existem; a página `/mensagens` ainda usa dados de exemplo.
 - **Mapa.** A busca e a página do item mostram um placeholder no lugar do mapa.
 - **Verificação de identidade** e **conta bancária do locador**.
 - **Login social.** O código está pronto; falta criar as credenciais no Google e
   no Facebook e ativá-las no Supabase (ver acima).
+- **Expiração automática.** `expire_promotions()` existe mas roda quando o admin
+  clica. O certo é agendar com `pg_cron` (`select cron.schedule(...)`).
