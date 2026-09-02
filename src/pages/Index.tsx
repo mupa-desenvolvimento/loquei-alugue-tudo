@@ -7,11 +7,18 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, PackageOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCategories, useListings } from "@/hooks/useListings";
+import { useAuth } from "@/contexts/AuthContext";
+import Landing from "./Landing";
 
 const Index = () => {
+  const { isAuthenticated, isLoading: verificandoSessao } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const { data: categories = [] } = useCategories();
   const { data: listings = [], isLoading } = useListings({ category: selectedCategory });
+
+  // Visitante ve a landing; quem ja tem conta cai direto no catalogo.
+  // O retorno vem depois dos hooks acima para nao mudar a ordem entre renders.
+  if (!verificandoSessao && !isAuthenticated) return <Landing />;
 
   const tabs = [{ slug: "all", name: "Todos", icon: null }, ...categories];
 

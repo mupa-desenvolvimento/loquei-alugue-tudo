@@ -102,11 +102,34 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				// Zoom lento no banner do hero, para a imagem parada nao parecer estatica.
+				'ken-burns': {
+					from: {
+						transform: 'scale(1) translate3d(0, 0, 0)'
+					},
+					to: {
+						transform: 'scale(1.12) translate3d(-1.5%, -1%, 0)'
+					}
+				},
+				'fade-up': {
+					from: {
+						opacity: '0',
+						transform: 'translateY(1rem)'
+					},
+					to: {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'ken-burns': 'ken-burns 9s ease-out forwards',
+				// `forwards`, nao `both`: com `both` o elemento fica invisivel antes de
+				// a animacao comecar, e some de vez se ela nao rodar.
+				'fade-up': 'fade-up 0.7s ease-out forwards'
 			}
 		}
 	},
