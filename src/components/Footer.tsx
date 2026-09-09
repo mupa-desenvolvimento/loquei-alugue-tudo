@@ -41,8 +41,8 @@ const Footer = () => {
               <li><Link to="/como-funciona" className="text-background/80 hover:text-background transition-colors">Como alugar</Link></li>
               <li><Link to="/buscar" className="text-background/80 hover:text-background transition-colors">Todas as categorias</Link></li>
               <li><Link to="/favoritos" className="text-background/80 hover:text-background transition-colors">Meus favoritos</Link></li>
-              <li><Link to="/mensagens" className="text-background/80 hover:text-background transition-colors">Minhas locações</Link></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Central de ajuda</a></li>
+              <li><Link to="/painel-locatario" className="text-background/80 hover:text-background transition-colors">Minhas locações</Link></li>
+              <li><Link to="/como-funciona" className="text-background/80 hover:text-background transition-colors">Central de ajuda</Link></li>
             </ul>
           </div>
 
@@ -51,9 +51,8 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><Link to="/anunciar" className="text-background/80 hover:text-background transition-colors">Anunciar item</Link></li>
               <li><Link to="/como-funciona" className="text-background/80 hover:text-background transition-colors">Como funciona</Link></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Dicas para locadores</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Meus anúncios</a></li>
-              <li><a href="#" className="text-background/80 hover:text-background transition-colors">Painel financeiro</a></li>
+                            <li><Link to="/painel-locador" className="text-background/80 hover:text-background transition-colors">Meus anúncios</Link></li>
+              <li><Link to="/painel-locador" className="text-background/80 hover:text-background transition-colors">Painel financeiro</Link></li>
             </ul>
           </div>
 
@@ -98,19 +97,19 @@ const Footer = () => {
         <div className="border-t border-background/20 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-background/60 text-sm">
-              © 2024 Loquei. Todos os direitos reservados.
+              © {new Date().getFullYear()} Loquei. Todos os direitos reservados.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-background/60 hover:text-background transition-colors">
+              <Link to="/termos" className="text-background/60 hover:text-background transition-colors">
                 Termos de Uso
-              </a>
-              <a href="#" className="text-background/60 hover:text-background transition-colors">
+              </Link>
+              <Link to="/privacidade" className="text-background/60 hover:text-background transition-colors">
                 Política de Privacidade
-              </a>
-              <a href="#" className="text-background/60 hover:text-background transition-colors">
-                Cookies
-              </a>
-              <a href="#" className="text-background/60 hover:text-background transition-colors">
+              </Link>
+              <a
+                href="mailto:contato@loquei.com.br"
+                className="text-background/60 hover:text-background transition-colors"
+              >
                 Suporte
               </a>
             </div>

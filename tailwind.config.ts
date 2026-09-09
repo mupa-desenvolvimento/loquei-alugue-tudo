@@ -133,5 +133,7 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	// O typography ja estava instalado no package.json, mas nunca foi
+	// registrado aqui: as classes `prose` nao surtiam efeito nenhum.
+	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

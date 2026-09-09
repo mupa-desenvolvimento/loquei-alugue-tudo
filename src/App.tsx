@@ -22,6 +22,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import Admin from "./pages/Admin";
 import Notificacoes from "./pages/Notificacoes";
+import Termos from "./pages/Termos";
+import Privacidade from "./pages/Privacidade";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +51,8 @@ const App = () => (
             <Route path="/entrar" element={<Login />} />
             <Route path="/cadastrar" element={<Cadastrar />} />
             <Route path="/produto/:id" element={<ProdutoDetalhe />} />
+            <Route path="/termos" element={<Termos />} />
+            <Route path="/privacidade" element={<Privacidade />} />
 
             {/* Exigem sessão */}
             <Route path="/anunciar" element={protect(<Anunciar />)} />
