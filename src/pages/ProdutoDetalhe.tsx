@@ -30,8 +30,8 @@ import { calculatePrice, countDays, formatBRL } from "@/lib/pricing";
 
 const HIGHLIGHTS = [
   { icon: Zap, label: "Retirada combinada com o dono", detail: "Vocês acertam local e horário pelo chat." },
-  { icon: ShieldCheck, label: "Proteção Loquei", detail: "Danos e roubo cobertos até o valor da caução." },
-  { icon: CheckCircle2, label: "Dono verificado", detail: "Identidade confirmada antes de anunciar." },
+  { icon: ShieldCheck, label: "Mediação da Loquei", detail: "Em caso de dano, a caução ressarce o dono e a Loquei media." },
+  { icon: CheckCircle2, label: "Avaliações de quem já alugou", detail: "Só quem alugou e devolveu pode avaliar o item." },
   { icon: CalendarIcon, label: "Cancelamento grátis", detail: "Até 24h antes da retirada." },
 ];
 
@@ -362,7 +362,7 @@ const ProdutoDetalhe = () => {
                           <span>{formatBRL(breakdown.serviceFee)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span>Proteção do item</span>
+                          <span>Taxa de mediação</span>
                           <span>{formatBRL(breakdown.insuranceFee)}</span>
                         </div>
                         {breakdown.deposit > 0 && (

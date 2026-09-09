@@ -98,7 +98,7 @@ const Checkout = () => {
   const priceRows = [
     [`${formatBRL(listing.price_per_day)} x ${days} ${days === 1 ? "dia" : "dias"}`, price.subtotal],
     ["Taxa de serviço", price.serviceFee],
-    ["Proteção do item", price.insuranceFee],
+    ["Taxa de mediação", price.insuranceFee],
   ] as const;
 
   return (

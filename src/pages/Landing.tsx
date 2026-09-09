@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, ShieldCheck, Wallet, Clock, ArrowRight, MapPin, TrendingUp,
+  Search, ShieldCheck, Wallet, Clock, ArrowRight, MapPin, TrendingUp, PackageOpen,
 } from "lucide-react";
 import { useCategories, useListings } from "@/hooks/useListings";
 import { useBanners } from "@/hooks/useBanners";
@@ -38,9 +38,9 @@ const VANTAGENS = [
   },
   {
     icon: ShieldCheck,
-    titulo: "Proteção em toda locação",
+    titulo: "Caução retida em toda locação",
     texto:
-      "Cada aluguel inclui cobertura para dano e roubo, e a caução fica bloqueada — não cobrada — até o item voltar.",
+      "A caução fica retida — não cobrada — até o item voltar. Se houver dano, ela ressarce o dono, e a Loquei media o acordo.",
   },
   {
     icon: Clock,
@@ -161,8 +161,8 @@ const Landing = () => {
 
               <p className="mt-4 text-sm text-white/75">
                 {destaques.length > 0
-                  ? `${destaques.length}+ itens disponíveis em ${categories.length} categorias`
-                  : "Milhares de itens esperando para serem usados"}
+                  ? `${destaques.length} ${destaques.length === 1 ? "item disponível" : "itens disponíveis"} em ${categories.length} categorias`
+                  : `${categories.length} categorias esperando o primeiro anúncio`}
               </p>
             </div>
 
@@ -213,15 +213,23 @@ const Landing = () => {
       <section className="container mx-auto px-4 pb-16 lg:pb-24">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold lg:text-3xl">Em destaque agora</h2>
-            <p className="text-foreground/70">Itens recém-anunciados perto de você</p>
+            <h2 className="text-2xl font-bold lg:text-3xl">
+              {destaques.length > 0 ? "Em destaque agora" : "Ainda sem anúncios"}
+            </h2>
+            <p className="text-foreground/70">
+              {destaques.length > 0
+                ? "Itens recém-anunciados perto de você"
+                : "Seja quem começa o catálogo da sua cidade"}
+            </p>
           </div>
-          <Button variant="outline" asChild className="rounded-full">
-            <Link to="/buscar">
-              Ver todos
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          {destaques.length > 0 && (
+            <Button variant="outline" asChild className="rounded-full">
+              <Link to="/buscar">
+                Ver todos
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -239,6 +247,21 @@ const Landing = () => {
               <ListingCard key={listing.id} listing={listing} />
             ))}
         </div>
+
+        {!isLoading && destaques.length === 0 && (
+          <div className="rounded-2xl border-2 border-dashed py-16 text-center">
+            <PackageOpen className="mx-auto mb-4 h-12 w-12 text-foreground/40" />
+            <h3 className="text-lg font-semibold">A Loquei está começando agora</h3>
+            <p className="mx-auto mt-2 max-w-md text-foreground/70">
+              Ainda não há itens anunciados. Se você tem algo parado em casa, seu
+              anúncio pode ser o primeiro — e aparece para todo mundo que chegar
+              depois.
+            </p>
+            <Button asChild className="mt-6 h-12 rounded-full px-8 font-semibold">
+              <Link to="/anunciar">Anunciar o primeiro item</Link>
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* ------------------------------------------------ categorias rápidas */}

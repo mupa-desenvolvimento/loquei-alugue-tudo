@@ -5,7 +5,9 @@ import { parseISO } from "date-fns";
  *
  * O que a plataforma cobra:
  * - taxa de serviço do locatário (SERVICE_FEE_RATE) — receita da Loquei;
- * - proteção do item (PROTECTION_RATE) — cobre dano/roubo até o valor da caução;
+ * - taxa de mediação (PROTECTION_RATE) — remunera a retenção da caução e a
+ *   mediação de disputas. NÃO é seguro: a Loquei não indeniza com recursos
+ *   próprios (ver Termos de Uso, item 8);
  * - comissão do locador (OWNER_COMMISSION_RATE), descontada do repasse.
  *
  * A caução é bloqueada, não cobrada: volta ao locatário se o item retornar ok.

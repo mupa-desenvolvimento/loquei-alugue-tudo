@@ -148,7 +148,7 @@ const ComoFunciona = () => {
               Sua segurança em primeiro lugar
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Na Loquei, oferecemos múltiplas camadas de proteção para locadores e locatários
+              O que a Loquei faz — e o que fica com você — em cada locação
             </p>
           </div>
 
@@ -157,9 +157,10 @@ const ComoFunciona = () => {
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Shield className="h-8 w-8 text-accent-foreground" />
               </div>
-              <h3 className="font-semibold mb-2">Pagamento Seguro</h3>
+              <h3 className="font-semibold mb-2">Pagamento pelo Mercado Pago</h3>
               <p className="text-sm text-muted-foreground">
-                Todos os pagamentos são processados com criptografia de ponta
+                Os dados do cartão são tratados pelo provedor de pagamento e nunca
+                passam pela Loquei
               </p>
             </div>
 
@@ -167,9 +168,10 @@ const ComoFunciona = () => {
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="h-8 w-8 text-accent-foreground" />
               </div>
-              <h3 className="font-semibold mb-2">Perfis Verificados</h3>
+              <h3 className="font-semibold mb-2">Avaliações reais</h3>
               <p className="text-sm text-muted-foreground">
-                Sistema de verificação de identidade e avaliações da comunidade
+                Só quem alugou e devolveu pode avaliar, então a nota reflete locações
+                que aconteceram de verdade
               </p>
             </div>
 
@@ -177,9 +179,10 @@ const ComoFunciona = () => {
               <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Star className="h-8 w-8 text-accent-foreground" />
               </div>
-              <h3 className="font-semibold mb-2">Suporte 24/7</h3>
+              <h3 className="font-semibold mb-2">Mediação em disputas</h3>
               <p className="text-sm text-muted-foreground">
-                Nossa equipe está sempre disponível para resolver qualquer problema
+                Se algo der errado, analisamos as evidências e decidimos sobre a caução
+                retida. Detalhes nos <a href="/termos" className="underline">termos de uso</a>
               </p>
             </div>
           </div>
