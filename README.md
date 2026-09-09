@@ -27,7 +27,9 @@ interface, não para uso real.
    - `0004_fix_admin_bootstrap.sql` — correção que permite criar o primeiro admin;
    - `0005_banners_and_monetization.sql` — banners e produtos pagos;
    - `0006_fix_promotion_privileges.sql` — impede obter promoção sem pagar;
-   - `0007_agendar_expiracao.sql` — encerra promoções vencidas de hora em hora.
+   - `0007_agendar_expiracao.sql` — encerra promoções vencidas de hora em hora;
+   - `0008_log_de_pagamentos.sql` — trilha de auditoria das notificações do provedor;
+   - `0009_fechar_rpc_anonima.sql` — impede visitante anônimo de liberar promoção.
 3. Copie `.env.example` para `.env` e preencha com os valores de **Project Settings → API**:
 
    ```
@@ -123,6 +125,54 @@ Nada disso é liberado pelo cliente: a promoção nasce como `pending`, e só o
 webhook (ou um admin, para pagamento fora da plataforma) chama
 `activate_promotion`. Triggers impedem que o dono do anúncio escreva
 `featured_until` ou vire Pro por conta própria.
+
+## Publicando na Vercel
+
+O repositório já traz o [`vercel.json`](vercel.json) com o que a plataforma
+precisa: build do Vite, reescrita de rotas para a SPA e cabeçalhos de segurança.
+
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório. O
+   framework é detectado como Vite; não altere build nem output.
+2. Em **Environment Variables**, adicione as duas do `.env` (Production,
+   Preview e Development):
+
+   ```
+   VITE_SUPABASE_URL=https://qgqsgzqnvjnzkxkduqov.supabase.co
+   VITE_SUPABASE_ANON_KEY=...
+   ```
+
+3. Deploy.
+
+Pela linha de comando o caminho é o mesmo:
+
+```bash
+npx vercel          # pré-visualização
+npx vercel --prod   # produção
+```
+
+### Depois do primeiro deploy
+
+O endereço muda, e três lugares precisam saber disso:
+
+```bash
+npx supabase secrets set SITE_URL=https://seu-dominio.vercel.app --project-ref <ref>
+```
+
+- **Supabase → Authentication → URL Configuration**: coloque o domínio em *Site
+  URL* e em *Redirect URLs*, senão a confirmação de email e o login social
+  voltam para o endereço errado.
+- **`vercel.json`**: a política de segurança (CSP) lista o domínio do Supabase.
+  Se trocar de projeto, atualize `connect-src` e `img-src`.
+- O webhook do Mercado Pago continua apontando para a Edge Function, que não
+  muda de endereço — não precisa mexer.
+
+### Sobre a política de segurança
+
+O `Content-Security-Policy` do `vercel.json` só permite scripts do próprio
+domínio e conexões para o Supabase. Isso reduz muito o estrago de um XSS, mas
+quebra silenciosamente qualquer serviço novo. Ao adicionar analytics, mapa,
+chat ou fonte externa, inclua o domínio na diretiva correspondente — o erro
+aparece no console do navegador como violação de CSP.
 
 ## Modelo de dados
 
