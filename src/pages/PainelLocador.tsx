@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { storageService } from "@/services/storage";
 import { toast } from "sonner";
@@ -25,11 +25,13 @@ import {
   Check,
   X,
   Sparkles,
+  MessageSquareText,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMyListings, useUpdateListingStatus } from "@/hooks/useListings";
 import { useReceivedBookings, useUpdateBookingStatus } from "@/hooks/useBookings";
+import { useAbrirConversa } from "@/hooks/useMensagens";
 import { formatBRL, OWNER_COMMISSION_RATE } from "@/lib/pricing";
 import PromoverDialog from "@/components/PromoverDialog";
 import type { ListingWithOwner } from "@/types/database";
@@ -49,6 +51,20 @@ const PainelLocador = () => {
   const { user, updateUser } = useAuth();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [promovendo, setPromovendo] = useState<ListingWithOwner | null>(null);
+  const navigate = useNavigate();
+  const abrirConversa = useAbrirConversa();
+
+  /** Abre a conversa com quem pediu o item. */
+  const conversarCom = (listingId: string | undefined, renterId: string) => {
+    if (!user || !listingId) return;
+    abrirConversa.mutate(
+      { listingId, ownerId: user.id, renterId },
+      {
+        onSuccess: (conversaId) => navigate(`/mensagens?conversa=${conversaId}`),
+        onError: () => toast.error("Não foi possível abrir a conversa"),
+      },
+    );
+  };
 
   const { data: listings = [], isLoading: loadingListings } = useMyListings(user?.id);
   const { data: bookings = [], isLoading: loadingBookings } = useReceivedBookings(user?.id);
@@ -281,6 +297,16 @@ const PainelLocador = () => {
                         Marcar como retirado
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full"
+                      disabled={abrirConversa.isPending}
+                      onClick={() => conversarCom(booking.listing?.id, booking.renter_id)}
+                    >
+                      <MessageSquareText className="mr-1 h-3.5 w-3.5" />
+                      Conversar
+                    </Button>
                     {booking.status === "active" && (
                       <Button size="sm" variant="outline" onClick={() => respondToBooking(booking.id, "returned")}>
                         Confirmar devolução

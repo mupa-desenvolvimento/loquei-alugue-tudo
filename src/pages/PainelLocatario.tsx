@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Package } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Calendar, Package, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyBookings, type BookingWithListing } from "@/hooks/useBookings";
+import { useAbrirConversa } from "@/hooks/useMensagens";
 import { formatBRL } from "@/lib/pricing";
 import type { BookingStatus } from "@/types/database";
 
@@ -32,7 +34,15 @@ const TAB_STATUSES: Record<string, BookingStatus[]> = {
 const TAB_STYLE =
   "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-0 mr-8 py-3 text-base font-medium text-muted-foreground hover:text-foreground transition-colors";
 
-const BookingCard = ({ booking }: { booking: BookingWithListing }) => (
+const BookingCard = ({
+  booking,
+  onAbrirConversa,
+  abrindo,
+}: {
+  booking: BookingWithListing;
+  onAbrirConversa: (booking: BookingWithListing) => void;
+  abrindo: boolean;
+}) => (
   <Card className="overflow-hidden hover:shadow-md transition-shadow group border-muted-foreground/20">
     <div className="aspect-video relative overflow-hidden bg-muted">
       {booking.listing?.images?.[0] && (
@@ -66,8 +76,14 @@ const BookingCard = ({ booking }: { booking: BookingWithListing }) => (
       <Button variant="outline" size="sm" className="flex-1 bg-background" asChild>
         <Link to={`/produto/${booking.listing_id}`}>Ver item</Link>
       </Button>
-      <Button size="sm" className="flex-1" asChild>
-        <Link to="/mensagens">Mensagem</Link>
+      <Button
+        size="sm"
+        className="flex-1"
+        disabled={abrindo || !booking.listing}
+        onClick={() => onAbrirConversa(booking)}
+      >
+        {abrindo && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+        Mensagem
       </Button>
     </CardFooter>
   </Card>
@@ -86,7 +102,25 @@ const EmptyState = ({ message }: { message: string }) => (
 
 const PainelLocatario = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: bookings = [], isLoading } = useMyBookings(user?.id);
+  const abrirConversa = useAbrirConversa();
+
+  /** Leva direto para a conversa daquele item com aquele dono. */
+  const conversar = (booking: BookingWithListing) => {
+    if (!user || !booking.listing) return;
+    abrirConversa.mutate(
+      {
+        listingId: booking.listing.id,
+        ownerId: booking.listing.owner_id,
+        renterId: user.id,
+      },
+      {
+        onSuccess: (conversaId) => navigate(`/mensagens?conversa=${conversaId}`),
+        onError: () => toast.error("Não foi possível abrir a conversa"),
+      },
+    );
+  };
 
   const tabs = [
     { value: "upcoming", label: "Próximas", empty: "Você não tem nenhuma locação agendada." },
@@ -125,7 +159,12 @@ const PainelLocatario = () => {
                 ) : filtered.length > 0 ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
                     {filtered.map((booking) => (
-                      <BookingCard key={booking.id} booking={booking} />
+                      <BookingCard
+                        key={booking.id}
+                        booking={booking}
+                        onAbrirConversa={conversar}
+                        abrindo={abrirConversa.isPending}
+                      />
                     ))}
                   </div>
                 ) : (
