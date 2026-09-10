@@ -19,6 +19,7 @@ import Checkout from "./pages/Checkout";
 import Perfil from "./pages/Perfil";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import AdminRoute from "./components/AdminRoute";
 import Admin from "./pages/Admin";
 import Notificacoes from "./pages/Notificacoes";
@@ -38,7 +39,8 @@ const queryClient = new QueryClient({
 const protect = (element: JSX.Element) => <ProtectedRoute>{element}</ProtectedRoute>;
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
@@ -72,7 +74,8 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
